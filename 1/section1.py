@@ -1,11 +1,14 @@
+from email import policy
 import numpy as np
 
 from python.constants import *
 from python.components import State, DeterministicDomain, StochasticDomain
-from python.policy import AlwaysGoRightPolicySimulation
+from python.policy import AlwaysGoRightPolicy
+from python.simulation import Simulation
 
 def simulateAndShowSingleTrajectory(initial_state: State, domain: StochasticDomain, steps: int):
-    simulation = AlwaysGoRightPolicySimulation(domain, initial_state.x, initial_state.y)
+    policy = AlwaysGoRightPolicy()
+    simulation = Simulation(domain, policy, initial_state.x, initial_state.y)
     for _ in range(steps):
         #simulation.domain.print_domain(simulation.state)
         print(simulation.step())
