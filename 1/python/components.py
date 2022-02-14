@@ -1,6 +1,8 @@
-from random import uniform
+import random
 import numpy as np
 from pprint import pprint
+
+random.seed(42)
 
 class Action:
     def __init__(self, action:tuple) -> None:
@@ -33,7 +35,7 @@ class StochasticDomain():
 
     def interact(self, state: State, action: Action):
         """Interacts with the domain, returns a (state, reward) pair"""
-        noise = uniform(0, 1)
+        noise = random.uniform(0, 1)
         new_state = self.f(state, action, noise)
         reward = self.R(new_state)
         return (new_state, reward)
