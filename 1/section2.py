@@ -7,7 +7,7 @@ import math
 
 if __name__ == '__main__':
     epsilon = 1e-6
-    N = math.ceil(math.log((epsilon * (1.0 -GAMMA))/ Br, GAMMA))
+    N = math.ceil(math.log((epsilon * (1.0-GAMMA))/ Br, GAMMA))
     print("N =", N)
 
     policy = AlwaysGoRightPolicy()

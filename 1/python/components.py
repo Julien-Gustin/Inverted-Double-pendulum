@@ -55,7 +55,7 @@ class StochasticDomain():
     def f(self, state: State, action: Action, noise: float):
         """ Dynamics functions """
         new_state = None
-        if noise < self.w:
+        if noise <= self.w:
             new_state = self.F(state, action)
         else:
             new_state = self.state = State(0, 0)
@@ -76,11 +76,6 @@ class StochasticDomain():
         for transition in possible_transitions:
             new_state, _, probability = transition
             if state == new_state:
-                # print("wow")
-                # print(state)
-                # print("can reach")
-                # print(new_state)
-                # print("gg")
                 #It is possible to reach State state with State given_state and Action given_action
                 return probability
         return 0.0
