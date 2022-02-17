@@ -37,7 +37,7 @@ def Q_function(domain: StochasticDomain, decay: float, N: int):
 def Q_learn(domain: StochasticDomain, decay: float):
     n, m = domain.g.shape
     nb_states = n*m
-    Q_table = Q_function(domain, decay, 100)
+    Q_table = Q_function(domain, decay, 30)
 
     action_indexes = [np.argmax(Q_table[i, ]) for i in range(nb_states)]
     Q_policy = np.array([domain.actions[ai] for ai in action_indexes])

@@ -8,7 +8,14 @@ class Action:
         self.j = action[0]
 
     def __repr__(self):
-        return "(" + str(self.i) + "," + str(self.j) + ")"
+        if self.i == -1 and self.j == 0:
+            return "LEFT"
+        elif self.i == 1 and self.j == 0:
+            return "RIGHT"
+        elif self.i == 0 and self.j == 1:
+            return "DOWN"
+        elif self.i == 0 and self.j == -1:
+            return "UP"
 
 class State:
     """ State space """
@@ -21,7 +28,7 @@ class State:
 
     def __eq__(self, other):
         if isinstance(other, State):
-            return self.x == other.y and self.y == other.y
+            return self.x == other.x and self.y == other.y
         return False 
 
 class StochasticDomain():
@@ -69,6 +76,11 @@ class StochasticDomain():
         for transition in possible_transitions:
             new_state, _, probability = transition
             if state == new_state:
+                # print("wow")
+                # print(state)
+                # print("can reach")
+                # print(new_state)
+                # print("gg")
                 #It is possible to reach State state with State given_state and Action given_action
                 return probability
         return 0.0
