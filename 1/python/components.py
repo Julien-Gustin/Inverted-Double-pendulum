@@ -19,12 +19,19 @@ class State:
     def __repr__(self):
         return "(" + str(self.x) + "," + str(self.y) + ")"
 
+    def __eq__(self, other):
+        if isinstance(other, State):
+            return self.x == other.y and self.y == other.y
+        return False 
+
 class StochasticDomain():
     # Action space
     LEFT = Action((0, -1))
     RIGHT = Action((0, 1))
     UP = Action((-1, 0))
     DOWN = Action((1, 0))
+
+    actions = [LEFT, RIGHT, UP, DOWN] #iterative purposes
 
     def __init__(self, g, w) -> None:
         self.g = g
@@ -52,16 +59,30 @@ class StochasticDomain():
         new_state = self.f(state, action, noise)
         return self.R(new_state)
 
+    def r(self, state: State, action: Action):
+        """ Expected reward """
+        return self.w * self.R(self.F(state, action)) + (1-self.w) * self.R(State(0, 0))
+    
+    def p(self, state: State, given_state: State, given_action: Action):
+        """ Probability of reaching state with given_state and given_action """
+        possible_transitions = self.possibleTransitions(given_state, given_action)
+        for transition in possible_transitions:
+            new_state, _, probability = transition
+            if state == new_state:
+                #It is possible to reach State state with State given_state and Action given_action
+                return probability
+        return 0.0
+
     def possibleTransitions(self, state: State, action: Action):
         """
         Returns a list of (new_state, reward, probability) tuples 
         for each possible transitions of this action in the current state.
         """
-        first_state = self.f(state, action, 0.0)
-        first_reward = self.r(state, action, 0.0)
+        first_state = self.F(state, action)
+        first_reward = self.R(state)
 
-        second_state = self.f(state, action, self.w)
-        second_reward = self.r(state, action, self.w)
+        second_state = State(0, 0)
+        second_reward = self.R(second_state)
 
         return [(first_state, first_reward, self.w), (second_state, second_reward, 1-self.w)]
 

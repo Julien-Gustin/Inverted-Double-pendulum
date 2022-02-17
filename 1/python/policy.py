@@ -2,7 +2,6 @@ from python.components import Action
 from python.components import State, StochasticDomain
 
 import numpy as np
-from python.constants import GAMMA
 
 class Policy():
     def chooseAction(self, state: State):
