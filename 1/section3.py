@@ -8,5 +8,7 @@ from python.policy import QLearningPolicy
 if __name__ == '__main__':
     domain = StochasticDomain(G, W[0])
     N = 1000
-    qlearning_policy = QLearningPolicy(domain, GAMMA)
-    print(qlearning_policy.Q_policy)
+    qfunc = Q_learn(domain, GAMMA)
+    print(qfunc)
+    # qlearning_policy = QLearningPolicy(domain, GAMMA)
+    # print(qlearning_policy.Q_policy)

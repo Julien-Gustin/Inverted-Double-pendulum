@@ -29,7 +29,6 @@ class Policy():
             j_prec = j_curr
         return j_curr
 
-
 class AlwaysGoRightPolicy(Policy):
     def chooseAction(self, state: State):
         return Action((0, 1))

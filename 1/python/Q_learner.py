@@ -27,7 +27,8 @@ def Q_function(domain: StochasticDomain, decay: float, N: int):
                 state = State(x, y)
                 for ai, action in enumerate(domain.actions):
                     reward_signal = domain.r(state, action)
-                    recc_value = sum(domain.p(State(two_indexes(i, n)[0], two_indexes(i, n)[1]), state, action) * max(Q_prec[i, ]) for i in range(nb_states))
+                    recc_value = sum(domain.p(State(two_indexes(i, n)[0], two_indexes(i, n)[1]), state, action) 
+                                    * max(Q_prec[i, ]) for i in range(nb_states))
                     Q_current[one_index(x, y, n), ai] = reward_signal + decay*recc_value
     
     return Q_current
