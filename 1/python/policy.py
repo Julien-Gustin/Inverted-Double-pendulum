@@ -1,3 +1,4 @@
+from python.Q_learner import Q_learn
 from python.components import Action
 from python.components import State, StochasticDomain
 
@@ -28,6 +29,14 @@ class Policy():
             j_prec = j_curr
         return j_curr
 
+
 class AlwaysGoRightPolicy(Policy):
     def chooseAction(self, state: State):
         return Action((0, 1))
+
+class QLearningPolicy(Policy):
+    def __init__(self, domain: StochasticDomain, decay: float):
+        self.Q_policy = Q_learn(domain, decay)
+
+    def chooseAction(self, state: State):
+        return self.Q_policy[state.y, state.x]

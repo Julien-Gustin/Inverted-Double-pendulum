@@ -1,6 +1,7 @@
 from torch import q_per_channel_axis
 from python.components import StochasticDomain, State
 import numpy as np
+import math 
 
 def one_index(x: int, y: int, n: int):
     """ maps index (y, x) into y*n + x """
@@ -30,5 +31,20 @@ def Q_function(domain: StochasticDomain, decay: float, N: int):
                     Q_current[one_index(x, y, n), ai] = reward_signal + decay*recc_value
     
     return Q_current
+
+
+def Q_learn(domain: StochasticDomain, decay: float):
+    n, m = domain.g.shape
+    nb_states = n*m
+    Q_table = Q_function(domain, decay, 100)
+
+    action_indexes = [np.argmax(Q_table[i, ]) for i in range(nb_states)]
+    Q_policy = np.array([domain.actions[ai] for ai in action_indexes])
+    return Q_policy.reshape(n, m)
+
+
+
+
+
 
 
