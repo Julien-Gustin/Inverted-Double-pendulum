@@ -11,7 +11,7 @@ np.random.seed(42)
 if __name__ == '__main__':
     epsilon = 1e-6
     N = math.ceil(math.log((epsilon * (1.0-GAMMA))/ Br, GAMMA))
-    show_latex = False
+    show_latex = True
     print("N =", N)
 
     policy = AlwaysGoRightPolicy()

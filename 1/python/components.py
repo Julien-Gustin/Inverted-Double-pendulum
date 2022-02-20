@@ -2,8 +2,6 @@ import numpy as np
 from pprint import pprint
 from python.constants import *
 
-random.seed(42)
-
 class Action:
     def __init__(self, action:tuple) -> None:
         self.i = action[0]
