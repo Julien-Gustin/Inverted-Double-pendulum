@@ -1,8 +1,11 @@
-from python.Q_learner import Q_learn
+from turtle import right
+from python.Q_learner import Q_learn, Q_learn_estimation
 from python.components import Action
-from python.components import State, StochasticDomain
+from python.components import State, StochasticDomain, LEFT, RIGHT, UP, DOWN
 
 import numpy as np
+
+from python.system_identification import MDP
 
 class Policy():
     def chooseAction(self, state: State):
@@ -24,18 +27,50 @@ class Policy():
                     action = self.chooseAction(state)
                     for transition in domain.possibleTransitions(state, action):
                         new_state, reward, probability = transition
-                        j_curr[y, x] += probability*(reward + decay*j_prec[new_state.y, new_state.x])
+                        j_curr[x, y] += probability*(reward + decay*j_prec[new_state.x, new_state.y])
 
             j_prec = j_curr
         return j_curr
 
 class AlwaysGoRightPolicy(Policy):
     def chooseAction(self, state: State):
-        return Action((0, 1))
+        return RIGHT
+
+class RandomUniformPolicy(Policy):
+    def chooseAction(self, state: State):
+        w = np.random.rand()
+        if w <= 0.25:
+            return RIGHT
+
+        if w <= 0.5:
+            return LEFT
+
+        if w <= 0.75:
+            return UP
+
+        return DOWN
 
 class QLearningPolicy(Policy):
-    def __init__(self, domain: StochasticDomain, decay: float):
-        self.Q_policy = Q_learn(domain, decay)
+    def __init__(self, domain: StochasticDomain, decay: float, N):
+        self.Q = Q_learn(domain, decay, N)
+        n, m = domain.g.shape
+        self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i,j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
+
+    def J(self, domain: StochasticDomain):
+        """
+        Computes the expected reward for every state 
+        of the domain if we follow N steps of this policy.
+        """
+        n, m = domain.g.shape
+        J = np.array([np.max(self.Q[i,j, ]) for i in range(n) for j in range(m)]).reshape(n, m)
+
+        return J
 
     def chooseAction(self, state: State):
-        return self.Q_policy[state.y, state.x]
+        return self.Q_policy[state.x, state.y]
+
+class EstimatedQLearningPolicy(QLearningPolicy):
+    def __init__(self, domain: StochasticDomain, mdp: MDP, decay: float, N):
+        self.Q = Q_learn_estimation(domain, decay, N, mdp)
+        n, m = domain.g.shape
+        self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i,j, ])] for i in range(n) for j in range(m)]).reshape(n, m)

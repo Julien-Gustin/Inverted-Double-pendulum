@@ -1,13 +1,15 @@
-from python.components import StochasticDomain, State
+from typing import Tuple
+from python.components import Action, StochasticDomain, State
 from python.policy import Policy
 
 import numpy as np 
 
 class Simulation():
-    def __init__(self, domain: StochasticDomain, policy: Policy, x_init: int, y_init: int):
+    def __init__(self, domain: StochasticDomain, policy: Policy, state: State, seed:int):
         self.domain = domain
-        self.state = State(x_init, y_init)
+        self.state = state
         self.policy = policy 
+        np.random.seed(seed)
 
     def step(self):
         action = self.policy.chooseAction(self.state)
