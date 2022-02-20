@@ -7,9 +7,9 @@ G = np.array(
                 [6, 3, 8, 9, 10],
                 [5, -8, 4, 1, -8],
                 [6, -9, 4, 19, -5],
-                [-20, -17, -4, -4, 9]
+                [-20, -17, -4, -3, 9]
             ]
-        )
+        ).T
 
 # Bound on the reward
 Br = G.max() 
@@ -19,3 +19,4 @@ GAMMA = 0.99
 
 # Probability distribution
 W = [0.5, 0.5] #first element is the probability to make the right action, the second is the probability to go back to (0, 0)
+
