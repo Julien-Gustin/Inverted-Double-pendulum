@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
         for t in T:
             mdp = MDP(n, m, len(domain.actions))
-            simulation = Simulation(domain, policy, initial_state, 42)
+            simulation = Simulation(domain, policy, initial_state, 10)
             for _ in range(t):
                 state, action, reward, next_state = simulation.step()
                 mdp.update(state, action, reward, next_state)

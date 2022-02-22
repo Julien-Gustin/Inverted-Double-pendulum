@@ -1,11 +1,9 @@
-from email import policy
 import numpy as np
 
 from python.constants import *
 from python.components import State, DeterministicDomain, StochasticDomain
 from python.policy import AlwaysGoRightPolicy
 from python.simulation import Simulation
-from python.latex import matrix_to_table
 
 np.random.seed(42)
 

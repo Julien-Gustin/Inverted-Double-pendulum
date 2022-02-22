@@ -1,8 +1,8 @@
-from email import policy
 from python.policy import AlwaysGoRightPolicy
 from python.constants import *
 from python.components import StochasticDomain, DeterministicDomain
 from python.latex import matrix_to_table
+
 import numpy as np
 import math
 
@@ -11,7 +11,7 @@ np.random.seed(42)
 if __name__ == '__main__':
     epsilon = 1e-6
     N = math.ceil(math.log((epsilon * (1.0-GAMMA))/ Br, GAMMA))
-    show_latex = True
+    show_latex = False
     print("N =", N)
 
     policy = AlwaysGoRightPolicy()

@@ -87,12 +87,13 @@ class StochasticDomain():
     def p(self, state: State, given_state: State, given_action: Action):
         """ Probability of reaching state with given_state and given_action """
         possible_transitions = self.possibleTransitions(given_state, given_action)
+        acc = 0
         for transition in possible_transitions:
             new_state, _, probability = transition
             if state == new_state:
-                #It is possible to reach State state with State given_state and Action given_action
-                return probability
-        return 0.0
+                acc += probability
+
+        return acc
 
     def possibleTransitions(self, state: State, action: Action):
         """
