@@ -16,3 +16,11 @@ class Simulation():
         prev_state = self.state
         self.state, reward = self.domain.interact(self.state, action)
         return prev_state, action, reward, self.state
+
+    def simulate(self, T):
+        h = []
+        for t in range(T):
+            state, action, reward, next_state = self.step()
+            h.append((state, action, reward, next_state))
+
+        return h
