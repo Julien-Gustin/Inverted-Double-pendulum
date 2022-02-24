@@ -19,7 +19,7 @@ class Simulation():
 
     def simulate(self, T):
         h = []
-        for t in range(T):
+        for _ in range(T):
             state, action, reward, next_state = self.step()
             h.append((state, action, reward, next_state))
 
