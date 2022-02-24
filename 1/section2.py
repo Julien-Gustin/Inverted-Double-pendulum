@@ -1,4 +1,3 @@
-from email import policy
 from python.policy import AlwaysGoRightPolicy
 from python.constants import *
 from python.components import StochasticDomain, DeterministicDomain

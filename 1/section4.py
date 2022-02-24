@@ -4,9 +4,8 @@ import numpy as np
 from python.latex import matrix_to_table, matrix_to_table_string
 
 from python.system_identification import MDP
-from python.policy import EstimatedQLearningPolicy, QLearningPolicy, RandomUniformPolicy
+from python.policy import EstimatedQLearningPolicy, QLearningPolicy, RandomUniformPolicy, Simulation
 from python.components import DeterministicDomain, StochasticDomain, State
-from python.simulation import Simulation
 from python.constants import *
 
 plt.rcParams['font.size'] = 14

@@ -55,6 +55,25 @@ def Q_learn_estimation(domain, decay, N, mdp):
     # current_action_indexes = np.array([domain.actions[np.argmax(Q_current[i,j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
     return Q_current
 
+def Q_learn_temporal_difference(state_space, action_space, trajectory, learning_ratio=0.05, decay=0.99):
+    n, m = state_space
+    nb_actions = len(action_space)
+    Q_table = np.zeros((n, m, nb_actions), dtype=float)
+
+    i = 0
+    while i < len(trajectory)-1: 
+        #one-step transition of our trajectory
+        starting_state = trajectory[i]
+        u = action_space.index(trajectory[i+1])
+        r = trajectory[i+2]
+        new_state = trajectory[i+3]
+        #update rule
+        Q_table[starting_state.x, starting_state.y, u] += learning_ratio*(r + decay*max(Q_table[new_state.x, new_state.y, ]) 
+                                                                            - Q_table[starting_state.x, starting_state.y, u])
+        i += 3 #new state is the next starting state
+
+    return Q_table
+
 
 
 
