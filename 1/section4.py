@@ -10,6 +10,7 @@ from python.simulation import Simulation
 from python.constants import *
 from python.utils import *
 
+
 if __name__ == '__main__':
     np.random.seed(12345)
     epsilon = 1e-3

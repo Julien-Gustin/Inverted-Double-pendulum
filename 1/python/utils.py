@@ -43,11 +43,12 @@ def get_max_diff_q(Q_hat, Q):
     return max_val
 
 
-def plot(x, y, estimate:str, file_name:str):
+def plot(x, y, estimate:str, file_name:str, log=True, line_style="--bo", xlabel="$t$"):
     fig = plt.figure(figsize=(8, 6))
-    plt.plot(x, y, '--bo')
-    plt.xscale('log')
-    plt.xlabel('$t$')
+    plt.plot(x, y, line_style)
+    if log:
+        plt.xscale('log')
+    plt.xlabel(xlabel)
     plt.ylabel(f'$\\left\\| \\hat{{}} - {{}}_N \\right\\|_\\infty$'.format(estimate, estimate))
     plt.grid()
     plt.savefig("figures/{}".format(file_name), **flags)
