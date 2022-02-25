@@ -48,7 +48,7 @@ def plot(x, y, estimate:str, file_name:str):
     plt.plot(x, y, '--bo')
     plt.xscale('log')
     plt.xlabel('$t$')
-    plt.ylabel(f'$\\left\\| \\hat{{}} - {{}} \\right\\|_\\infty$'.format(estimate, estimate))
+    plt.ylabel(f'$\\left\\| \\hat{{}} - {{}}_N \\right\\|_\\infty$'.format(estimate, estimate))
     plt.grid()
     plt.savefig("figures/{}".format(file_name), **flags)
 

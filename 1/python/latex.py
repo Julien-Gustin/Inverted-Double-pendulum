@@ -1,4 +1,3 @@
-import numpy as np
 def matrix_to_table(matrix, caption):
     latex_str = "\n \\begin{table}[H] \centering \\begin{tabular}{c|c|c|c|c|c} \diagbox{$y$}{$x$} & $\\bm{0}$ & $\\bm{1}$ & $\\bm{2}$ & $\\bm{3}$ & $\\bm{4}$"
     for row_nb, row in enumerate(matrix):

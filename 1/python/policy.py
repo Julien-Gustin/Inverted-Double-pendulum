@@ -1,5 +1,5 @@
 from turtle import right
-from python.Q_learner import Q_learn, Q_learn_estimation
+from python.Q_learner import Q_learn, Q_learn_estimation, Q_learn_temporal_difference
 from python.components import Action
 from python.components import State, StochasticDomain, LEFT, RIGHT, UP, DOWN
 
@@ -54,7 +54,7 @@ class QLearningPolicy(Policy):
     def __init__(self, domain: StochasticDomain, decay: float, N):
         self.Q = Q_learn(domain, decay, N)
         n, m = domain.g.shape
-        self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i,j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
+        self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i, j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
 
     def J(self, domain: StochasticDomain):
         """
@@ -62,7 +62,7 @@ class QLearningPolicy(Policy):
         of the domain if we follow N steps of this policy.
         """
         n, m = domain.g.shape
-        J = np.array([np.max(self.Q[i,j, ]) for i in range(n) for j in range(m)]).reshape(n, m)
+        J = np.array([np.max(self.Q[i, j, ]) for i in range(n) for j in range(m)]).reshape(n, m)
 
         return J
 
@@ -73,4 +73,10 @@ class EstimatedQLearningPolicy(QLearningPolicy):
     def __init__(self, domain: StochasticDomain, mdp: MDP, decay: float, N):
         self.Q = Q_learn_estimation(domain, decay, N, mdp)
         n, m = domain.g.shape
-        self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i,j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
+        self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i, j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
+
+class TrajectoryBasedQLearningPolicy(QLearningPolicy):
+    def __init__(self, state_space, action_space, trajectory, learning_rate, decay, seed=42):
+        self.Q = Q_learn_temporal_difference(state_space, action_space, trajectory, learning_rate, decay)
+        n, m, _ = self.Q.shape 
+        self.Q_policy = np.array([action_space[np.argmax(self.Q[i, j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
