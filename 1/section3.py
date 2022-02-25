@@ -9,7 +9,7 @@ from python.latex import matrix_to_table, matrix_to_table_string
 np.random.seed(42)
 
 if __name__ == '__main__':
-    epsilon = 1e-6
+    epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * Br)) * (1. - GAMMA) ** 2, GAMMA))
     show_latex = False
 

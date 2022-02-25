@@ -52,7 +52,6 @@ def Q_learn_estimation(domain, decay, N, mdp):
     for _ in range(N):
         Q_current = Q_function_estimation(domain, decay, Q_current, mdp)
 
-    # current_action_indexes = np.array([domain.actions[np.argmax(Q_current[i,j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
     return Q_current
 
 

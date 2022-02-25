@@ -11,15 +11,14 @@ from python.constants import *
 from python.utils import *
 
 if __name__ == '__main__':
-    np.random.seed(42)
+    np.random.seed(12345)
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * Br)) * (1. - GAMMA) ** 2, GAMMA))
     initial_state = State(0, 3)
-    show_latex = True
+    show_latex = False
 
     deterministic_domain = DeterministicDomain(G)
     stochastic_domain = StochasticDomain(G, W[0])
-
 
     n, m = deterministic_domain.g.shape
 
@@ -43,7 +42,7 @@ if __name__ == '__main__':
         P_diff = []
         Q_diff = []
 
-        simulation = Simulation(domain, policy, initial_state, 3)
+        simulation = Simulation(domain, policy, initial_state, 12345)
 
         h = simulation.simulate(T[-1])
 
