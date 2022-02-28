@@ -1,6 +1,5 @@
-from turtle import right
-
-from tenacity import DoAttempt
+from cv2 import exp, normalize
+from random import choice, choices
 from python.Q_learner import Q_learn, Q_learn_estimation, Q_learn_temporal_difference
 from python.components import Action
 from python.components import State, StochasticDomain, LEFT, RIGHT, UP, DOWN
@@ -123,3 +122,31 @@ class EpsilonGreedyPolicy(Policy):
 
     def updatePolicy(self, trajectory: tuple, gamma=GAMMA):
         self.Q = Q_learn_temporal_difference(self.Q, [trajectory], self.domain.actions, learning_rate=self.learning_rate, decay=gamma)
+
+
+class BoltzmanPolicy(Policy):
+    def __init__(self, domain: StochasticDomain, learning_rate: float, gamma=GAMMA, seed=42):
+        n, m = domain.g.shape
+        nb_actions = len(domain.actions)
+        self.learning_rate = learning_rate
+        self.actions = domain.actions
+        self.Q = np.zeros((n, m, nb_actions), dtype=float)
+        self.Br = domain.g.max()
+        self.gamma = gamma 
+    
+    def _boltzmanProbabilityDistribution(self, state: State, action: Action):
+        ai = self.actions.index(action)
+        tau = (1-self.gamma)/self.Br
+        exp_state_action = exp(self.Q[state.x, state.y, ai]/tau)
+        total_exp_state_action = sum(self.Q[state.x, state.y, ]/tau)
+
+        return exp_state_action / total_exp_state_action
+        
+    def chooseAction(self, state: State):
+        softmax_probability_distribution = normalize([self._boltzmanProbabilityDistribution(state, a) for a in self.actions])
+        return choices(self.actions, weights=softmax_probability_distribution)
+
+    def updatePolicy(self, trajectory: tuple):
+        self.Q = Q_learn_temporal_difference(self.Q, [trajectory], self.actions, learning_rate=self.learning_rate, decay=self.gamma)
+    
+

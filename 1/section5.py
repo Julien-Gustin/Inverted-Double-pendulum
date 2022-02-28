@@ -2,7 +2,7 @@
 from re import S
 from python.components import DeterministicDomain, State, StochasticDomain
 from python.constants import *
-from python.policy import EpsilonGreedyPolicy, QLearningPolicy, RandomUniformPolicy, TrajectoryBasedQLearningPolicy
+from python.policy import BoltzmanPolicy, EpsilonGreedyPolicy, QLearningPolicy, RandomUniformPolicy, TrajectoryBasedQLearningPolicy
 from python.simulation import Simulation
 
 import math
@@ -166,6 +166,16 @@ def _3(domains, labels, initial_state):
     online(episodes, transitions, learning_rate, e, domains, labels, policies, initial_state, gamma=gamma, **experiment)
 
 
+def _4(domains, labels, initial_state):
+    transitions = 1000
+    episodes = 100
+    learning_rate = 0.05
+    policies = []
+    for _, domain in zip(labels, domains):
+        policies.append(BoltzmanPolicy(domain, learning_rate, GAMMA, 1))
+
+    experiment = {"title": "5_4_experiment_1", "decay":GAMMA, "replay":False}
+    #online(episodes, transitions, learning_rate, )
 
 
 if __name__ == "__main__":
