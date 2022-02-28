@@ -12,21 +12,16 @@ import matplotlib.pyplot as plt
 from python.utils import infinity_norm, plot_with_std
 from python.latex import *
 
-# import seaborn as sns
 import matplotlib.pylab as plt
 import numpy as np
-
-# sns.set(rc={'figure.figsize':(9,7)})
 
 def online(episodes, transitions, learning_rate, e, domains, labels, policies, initial_state, gamma, title, decay=1, replay=False):
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * Br)) * (1. - gamma) ** 2, gamma))
 
     for q_learning_policy, label, domain in zip(policies, labels, domains):
-        nb_iterations = 1
+        nb_iterations = 10
 
-        if label == "Stochastic":
-            nb_iterations = 10
 
         dist_between_jvalues = np.zeros((nb_iterations, episodes))
         dist_between_q = np.zeros((nb_iterations, episodes))
@@ -35,7 +30,7 @@ def online(episodes, transitions, learning_rate, e, domains, labels, policies, i
         # Iterate to compute mean and std, incorpore uncertanty
         for i in range(nb_iterations):
             replay_buffer = []
-            policy = EpsilonGreedyPolicy(domain, learning_rate, e)
+            policy = EpsilonGreedyPolicy(domain, learning_rate, e, seed=i)
 
             for episode in range(episodes): 
                 state = initial_state
@@ -60,10 +55,7 @@ def online(episodes, transitions, learning_rate, e, domains, labels, policies, i
                 dist_between_q[i][episode] = infinity_norm(policy.Q, q_learning_policy.Q)
                 policy.epsilon = e
 
-            # plt.clf()
-            # ax = sns.heatmap(matrix_reach.T/nb_iterations, linewidth=0.5,annot=True)
-            # plt
-            # plt.savefig("figures/heatmap_{}_{}".format(title, label))
+                policy.learning_rate = learning_rate
 
         means_j = dist_between_jvalues.mean(axis=0)
         stds_j = dist_between_jvalues.std(axis=0)
@@ -75,8 +67,6 @@ def online(episodes, transitions, learning_rate, e, domains, labels, policies, i
         plot_with_std(range(episodes), means_q, stds_q, title + "_" + label + "_Q", r'$\left\| \hat{Q} - Q^N \right\|_\infty$', log=False, line_style="-", xlabel="Episode")
 
 def _1(domains, labels, policies, initial_state):
-    policy = RandomUniformPolicy()
-
     latex = False
 
     T = [10**i for i in range(1, 7)]
@@ -86,10 +76,7 @@ def _1(domains, labels, policies, initial_state):
     N = math.ceil(math.log((epsilon / (2 * Br)) * (1. - GAMMA) ** 2, GAMMA))
     
     for q_learning_policy, label, domain in zip(policies, labels, domains):
-        nb_iterations = 1
-
-        if label == "Stochastic":
-            nb_iterations = 10
+        nb_iterations = 10
 
         n, m = domain.g.shape
 
@@ -99,6 +86,8 @@ def _1(domains, labels, policies, initial_state):
         dist_between_qvalues = np.zeros((nb_iterations, len(T)))
 
         for i in range(nb_iterations): 
+            policy = RandomUniformPolicy(seed=i*10)
+            
             #generate a trajectory of size max(T)
             simulation = Simulation(domain, policy, initial_state, seed=i)
             trajectory = simulation.simulate(max(T))
@@ -193,7 +182,7 @@ if __name__ == "__main__":
         policies.append(QLearningPolicy(domain, GAMMA, N))
 
 
-    _1(domains, labels, policies, initial_state)
+    # _1(domains, labels, policies, initial_state)
     _2(domains, labels, policies, initial_state)
     _3(domains, labels, initial_state)
     

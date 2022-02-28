@@ -40,6 +40,9 @@ class AlwaysGoRightPolicy(Policy):
         return RIGHT
 
 class RandomUniformPolicy(Policy):
+    def __init__(self, seed):
+        np.random.seed(seed)
+
     def chooseAction(self, state: State):
         w = np.random.rand()
         if w <= 0.25:
@@ -98,12 +101,12 @@ class TrajectoryBasedQLearningPolicy(QLearningPolicy):
         return Policy.J(self, domain, decay, N)
 
 class EpsilonGreedyPolicy(Policy):
-    def __init__(self, domain: StochasticDomain, learning_rate: float, epsilon:float):
+    def __init__(self, domain: StochasticDomain, learning_rate: float, epsilon:float, seed):
         self.domain = domain
         self.learning_rate = learning_rate
         self.epsilon = epsilon
 
-        self.random_policy = RandomUniformPolicy()
+        self.random_policy = RandomUniformPolicy(seed)
 
         n, m = domain.g.shape
         nb_actions = len(domain.actions)

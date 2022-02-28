@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     n, m = deterministic_domain.g.shape
 
-    policy = RandomUniformPolicy()
+    policy = RandomUniformPolicy(42)
 
     Q_policy_deterministic = QLearningPolicy(deterministic_domain, 0.99, N)
     Q_policy_stochastic = QLearningPolicy(stochastic_domain, 0.99, N)
