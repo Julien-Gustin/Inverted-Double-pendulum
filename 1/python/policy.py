@@ -6,6 +6,7 @@ from python.components import Action
 from python.components import State, StochasticDomain, LEFT, RIGHT, UP, DOWN
 
 import numpy as np
+from python.constants import GAMMA
 
 from python.system_identification import MDP
 
@@ -78,24 +79,35 @@ class EstimatedQLearningPolicy(QLearningPolicy):
         n, m = domain.g.shape
         self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i, j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
 
+    def J(self, domain: StochasticDomain, decay: float, N: int):
+        return Policy.J(self, domain, decay, N)
+
 class TrajectoryBasedQLearningPolicy(QLearningPolicy):
-    def __init__(self, domain: StochasticDomain, trajectory: list, learning_rate: float, decay: float, seed=42):
+    def __init__(self, domain: StochasticDomain, trajectory: list, learning_rate: float, decay: float):
         n, m = domain.g.shape
         nb_actions = len(domain.actions)
         Q_table = np.zeros((n, m, nb_actions), dtype=float)
         self.domain = domain
-
         self.Q = Q_learn_temporal_difference(Q_table, trajectory, domain.actions, learning_rate, decay)
-        self.Q_policy = np.array([domain.actions[np.argmax(self.Q[i, j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
+
+    def compute_policy(self):
+        n, m = self.domain.g.shape
+        self.Q_policy = np.array([self.domain.actions[np.argmax(self.Q[i, j, ])] for i in range(n) for j in range(m)]).reshape(n, m)
+
+    def J(self, domain: StochasticDomain, decay: float, N: int):
+        return Policy.J(self, domain, decay, N)
 
 class EpsilonGreedyPolicy(Policy):
     def __init__(self, domain: StochasticDomain, learning_rate: float, epsilon:float):
+        self.domain = domain
         self.learning_rate = learning_rate
         self.epsilon = epsilon
+
         self.random_policy = RandomUniformPolicy()
-        self.domain = domain
+
         n, m = domain.g.shape
         nb_actions = len(domain.actions)
+
         self.Q = np.zeros((n, m, nb_actions), dtype=float)
 
     def chooseAction(self, state: State):
@@ -106,5 +118,5 @@ class EpsilonGreedyPolicy(Policy):
 
         return self.domain.actions[np.argmax(self.Q[state.x, state.y, ])]
 
-    def updatePolicy(self, trajectory: tuple):
-        self.Q = Q_learn_temporal_difference(self.Q, [trajectory], self.domain.actions, learning_rate=self.learning_rate, decay=0.99)
+    def updatePolicy(self, trajectory: tuple, gamma=GAMMA):
+        self.Q = Q_learn_temporal_difference(self.Q, [trajectory], self.domain.actions, learning_rate=self.learning_rate, decay=gamma)

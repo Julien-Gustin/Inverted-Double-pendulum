@@ -16,7 +16,7 @@ if __name__ == '__main__':
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * Br)) * (1. - GAMMA) ** 2, GAMMA))
     initial_state = State(0, 3)
-    show_latex = False
+    show_latex = True
 
     deterministic_domain = DeterministicDomain(G)
     stochastic_domain = StochasticDomain(G, W[0])
@@ -35,9 +35,9 @@ if __name__ == '__main__':
     for domain_name, domain, Q_policy in [("Deterministic", deterministic_domain, Q_policy_deterministic),
                                           ("Stochastic", stochastic_domain, Q_policy_stochastic)]:
         print("\n--- {} ---\n".format(domain_name))
-        print("Value function:\n",Q_policy.J(domain).T)
+        print("Value function:\n",Q_policy.J().T)
         if show_latex:
-            print(matrix_to_table(Q_policy.J(domain).T, "TODO"))
+            print(matrix_to_table(Q_policy.J().T, "TODO"))
 
         R_diff = []
         P_diff = []
@@ -54,13 +54,13 @@ if __name__ == '__main__':
 
             R_diff.append(get_max_diff_r(domain, mdp))
             P_diff.append(get_max_diff_p(domain, mdp))
-            Q_diff.append(get_max_diff_q(estimated_Q_policy.Q, Q_policy.Q))
+            Q_diff.append(infinity_norm(estimated_Q_policy.Q, Q_policy.Q))
 
-            print("\nValue function estimation after {} step:\n".format(t), estimated_Q_policy.J(domain).T)
+            print("\nJ^N estimation after {} step:\n".format(t), estimated_Q_policy.J(domain, 0.99, N).T)
 
         if show_latex:
             print(matrix_to_table_string(estimated_Q_policy.Q_policy.T, "TODO"))
-            print(matrix_to_table(estimated_Q_policy.J(domain).T, "TODO"))
+            print(matrix_to_table(estimated_Q_policy.J(domain, 0.99, N).T, "TODO"))
 
         plot(T, R_diff, "r", "{}_R".format(domain_name))
         plot(T, P_diff, "p", "{}_P".format(domain_name))
