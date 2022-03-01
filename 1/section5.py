@@ -2,12 +2,11 @@
 from re import S
 from python.components import DeterministicDomain, State, StochasticDomain
 from python.constants import *
-from python.policy import BoltzmanPolicy, EpsilonGreedyPolicy, QLearningPolicy, RandomUniformPolicy, TrajectoryBasedQLearningPolicy
+from python.policy import EntropyBasedPolicy, EpsilonGreedyPolicy, QLearningPolicy, RandomUniformPolicy, TrajectoryBasedQLearningPolicy
 from python.simulation import Simulation
 
 import math
 import random
-import matplotlib.pyplot as plt
 
 from python.utils import infinity_norm, plot_with_std
 from python.latex import *
@@ -65,6 +64,43 @@ def online(episodes, transitions, learning_rate, e, domains, labels, policies, i
 
         plot_with_std(range(episodes), means_j, stds_j, title + "_" + label, r'$\left\| J^N_{\mu_\hat{Q}} - J^N_{\mu^*} \right\|_\infty$', log=False, line_style="-", xlabel="Episode")
         plot_with_std(range(episodes), means_q, stds_q, title + "_" + label + "_Q", r'$\left\| \hat{Q} - Q^N \right\|_\infty$', log=False, line_style="-", xlabel="Episode")
+
+def online_entropy(episodes, transitions, learning_rate, domains, labels, policies, initial_state, gamma, title):
+    epsilon = 1e-3
+    N = math.ceil(math.log((epsilon / (2 * Br)) * (1. - gamma) ** 2, gamma))
+
+    for q_learning_policy, label, domain in zip(policies, labels, domains):
+        nb_iterations = 10
+
+        dist_between_jvalues = np.zeros((nb_iterations, episodes))
+        dist_between_q = np.zeros((nb_iterations, episodes))
+
+        # Iterate to compute mean and std, incorpore uncertanty
+        for i in range(nb_iterations):
+            policy = EntropyBasedPolicy(domain, learning_rate, gamma, seed=i)
+
+            for episode in range(episodes): 
+                state = initial_state
+                simulation = Simulation(domain, policy, state, seed=nb_iterations*i+episode)
+
+                for __ in range(transitions):
+                    trajectory_update = simulation.step()    
+                    policy.updatePolicy(trajectory_update, gamma)
+
+                dist_between_jvalues[i][episode] = infinity_norm(policy.J(domain, gamma, N), q_learning_policy.J())
+                dist_between_q[i][episode] = infinity_norm(policy.Q, q_learning_policy.Q)
+
+                policy.learning_rate = learning_rate
+
+        means_j = dist_between_jvalues.mean(axis=0)
+        stds_j = dist_between_jvalues.std(axis=0)
+
+        means_q = dist_between_q.mean(axis=0)
+        stds_q = dist_between_q.std(axis=0)
+
+        plot_with_std(range(episodes), means_j, stds_j, title + "_" + label, r'$\left\| J^N_{\mu_\hat{Q}} - J^N_{\mu^*} \right\|_\infty$', log=False, line_style="-", xlabel="Episode")
+        plot_with_std(range(episodes), means_q, stds_q, title + "_" + label + "_Q", r'$\left\| \hat{Q} - Q^N \right\|_\infty$', log=False, line_style="-", xlabel="Episode")
+
 
 def _1(domains, labels, policies, initial_state):
     latex = False
@@ -166,16 +202,11 @@ def _3(domains, labels, initial_state):
     online(episodes, transitions, learning_rate, e, domains, labels, policies, initial_state, gamma=gamma, **experiment)
 
 
-def _4(domains, labels, initial_state):
+def _4(domains, policies, labels, initial_state):
     transitions = 1000
     episodes = 100
     learning_rate = 0.05
-    policies = []
-    for _, domain in zip(labels, domains):
-        policies.append(BoltzmanPolicy(domain, learning_rate, GAMMA, 1))
-
-    experiment = {"title": "5_4_experiment_1", "decay":GAMMA, "replay":False}
-    #online(episodes, transitions, learning_rate, )
+    online_entropy(episodes, transitions, learning_rate, domains, labels, policies, initial_state, GAMMA, title="5_4_experiment_1")
 
 
 if __name__ == "__main__":
@@ -191,8 +222,10 @@ if __name__ == "__main__":
         #QLearning using domain as being known     
         policies.append(QLearningPolicy(domain, GAMMA, N))
 
+    print("Computing policy...")
 
     # _1(domains, labels, policies, initial_state)
-    _2(domains, labels, policies, initial_state)
-    _3(domains, labels, initial_state)
+    #_2(domains, labels, policies, initial_state)
+    #_3(domains, labels, initial_state)
+    _4(domains, policies, labels, initial_state)
     

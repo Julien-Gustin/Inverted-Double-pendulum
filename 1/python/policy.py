@@ -1,8 +1,8 @@
-from cv2 import exp, normalize
-from random import choice, choices
 from python.Q_learner import Q_learn, Q_learn_estimation, Q_learn_temporal_difference
 from python.components import Action
 from python.components import State, StochasticDomain, LEFT, RIGHT, UP, DOWN
+
+from math import log 
 
 import numpy as np
 from python.constants import GAMMA
@@ -123,8 +123,7 @@ class EpsilonGreedyPolicy(Policy):
     def updatePolicy(self, trajectory: tuple, gamma=GAMMA):
         self.Q = Q_learn_temporal_difference(self.Q, [trajectory], self.domain.actions, learning_rate=self.learning_rate, decay=gamma)
 
-
-class BoltzmanPolicy(Policy):
+class EntropyBasedPolicy(Policy):
     def __init__(self, domain: StochasticDomain, learning_rate: float, gamma=GAMMA, seed=42):
         n, m = domain.g.shape
         nb_actions = len(domain.actions)
@@ -133,20 +132,50 @@ class BoltzmanPolicy(Policy):
         self.Q = np.zeros((n, m, nb_actions), dtype=float)
         self.Br = domain.g.max()
         self.gamma = gamma 
-    
-    def _boltzmanProbabilityDistribution(self, state: State, action: Action):
-        ai = self.actions.index(action)
-        tau = (1-self.gamma)/self.Br
-        exp_state_action = exp(self.Q[state.x, state.y, ai]/tau)
-        total_exp_state_action = sum(self.Q[state.x, state.y, ]/tau)
+        self.random_policy = RandomUniformPolicy(seed=seed)
 
+    def _make_action(self, state: State):
+        return self.actions[np.argmax(self.Q[state.x, state.y, ])]
+
+    def _probabilityDistribution(self, state: State, action: Action):
+        ai = self.actions.index(action)
+        maxQ = np.max(self.Q[state.x, state.y, ])
+        exp_state_action = np.exp(self.Q[state.x, state.y, ai]-maxQ)
+        total_exp_state_action = np.sum(np.exp(self.Q[state.x, state.y, ]-maxQ))
         return exp_state_action / total_exp_state_action
         
-    def chooseAction(self, state: State):
-        softmax_probability_distribution = normalize([self._boltzmanProbabilityDistribution(state, a) for a in self.actions])
-        return choices(self.actions, weights=softmax_probability_distribution)
+    def J(self, domain: StochasticDomain, decay: float, N: int):
+        """
+        Computes the expected reward for every state 
+        of the domain if we follow N steps of this policy.
+        """
+        m, n = domain.g.shape
+        j_prec = np.zeros((n, m))
 
-    def updatePolicy(self, trajectory: tuple):
+        for _ in range(N):
+            j_curr = np.zeros((n, m))
+            for x in range(n):
+                for y in range(m):
+                    state = State(x, y)
+                    action = self._make_action(state)
+                    for transition in domain.possibleTransitions(state, action):
+                        new_state, reward, probability = transition
+                        j_curr[x, y] += probability*(reward + decay*j_prec[new_state.x, new_state.y])
+
+            j_prec = j_curr
+        return j_curr
+
+    def chooseAction(self, state: State):
+        probabilies = np.array([self._probabilityDistribution(state, a) for a in self.actions])
+        entropy = np.power(-np.sum(p*log(p, len(self.actions)) for p in probabilies if p > 0), 1)
+
+        noise = np.random.uniform()
+        if noise <= entropy:
+            return self.random_policy.chooseAction(state)
+
+        return self._make_action(state)
+
+    def updatePolicy(self, trajectory: tuple, gamma=GAMMA):
         self.Q = Q_learn_temporal_difference(self.Q, [trajectory], self.actions, learning_rate=self.learning_rate, decay=self.gamma)
     
 
