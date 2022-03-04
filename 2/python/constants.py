@@ -8,3 +8,5 @@ INTEGRATION_TIME_STEP = 0.001
 TIME_STEP = 0.1
 
 M = 1
+
+B_r = 1

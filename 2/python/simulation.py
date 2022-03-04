@@ -1,3 +1,5 @@
+import numpy as np
+
 from python.domain import CarOnTheHillDomain, State
 from python.policy import Policy
 
@@ -8,7 +10,7 @@ class Simulation():
         remember_trajectory: if true, it keeps track of the trajectory done by the simulator
         initial_state: initial state on the domain
     """
-    def __init__(self, domain: CarOnTheHillDomain, policy: Policy, initial_state: State, remember_trajectory=False) -> None:
+    def __init__(self, domain: CarOnTheHillDomain, policy: Policy, initial_state: State, remember_trajectory=False, seed=43) -> None:
         self.domain = domain
         self.policy = policy
         self.state = initial_state
@@ -16,6 +18,10 @@ class Simulation():
         self.trajectory = None 
         if remember_trajectory:
             self.trajectory = list()
+
+        np.random.seed(seed)
+
+
 
     """
         Simulate (steps) steps on the domain, according to the policy

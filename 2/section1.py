@@ -1,4 +1,3 @@
-from email import policy
 from python.constants import *
 from python.domain import State, CarOnTheHillDomain
 from python.policy import AlwaysAcceleratePolicy, RandomActionPolicy
