@@ -20,7 +20,7 @@ class State:
         return self.terminal
 
     def __repr__(self) -> str: 
-        return "(p={}, s={})".format(self.p, self.s)
+        return "(p={:.2f}, s={:.2f})".format(self.p, self.s)
 
 class CarOnTheHillDomain():
     def __init__(self, discount_factor=0.95, m=1, g=9.81, time_step=0.1, integration_time_step=0.001):
@@ -30,7 +30,7 @@ class CarOnTheHillDomain():
         self.m = m
         self.g = g 
 
-    def _Hill(self, p) -> float:
+    def _Hill(self, p: float) -> float:
         return (p**2 + p) if p < 0 else p/(1+5*(p**2)**(0.5))
 
     def _Hill_first(self, p: float) -> float:
@@ -39,30 +39,31 @@ class CarOnTheHillDomain():
     def _Hill_second(self, p: float) -> float:
         return 2 if p < 0 else (-15*p)/(1+5*p**2)**(2.5)
 
-    def f(self, state: State, action: int):
+    def f(self, state: State, action: int) -> State:
         if state.is_terminal():
             return state 
 
         p = state.p
         s = state.s 
 
-        for _ in range(self.time_step // self.integration_time_step):
+        for _ in range(int(self.time_step/self.integration_time_step)):
             hill_first = self._Hill_first(p)
             hill_second = self._Hill_second(p)
+            p_first = s 
             s_first = action/(self.m*(1+hill_first**2)) - (self.g*hill_first + hill_first*hill_second*(s**2))/(1+hill_first**2)
-            p += s*self.integration_time_step
+            p += p_first*self.integration_time_step
             s += s_first*self.integration_time_step
 
         return State(p, s)
             
 
-    def r(self, state: State, action: int):
+    def r(self, state: State, action: int) -> int:
         if state.is_terminal():
             return 0
         new_state = self.f(state, action)
         if new_state.p < -1 or np.abs(new_state.s) > 3:
             return -1
 
-        return new_state.p > 1 and np.abs(new_state.s) <= 3
+        return 1 if (new_state.p > 1 and np.abs(new_state.s) <= 3) else 0
 
 
