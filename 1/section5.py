@@ -1,5 +1,4 @@
 
-from re import S
 from python.components import DeterministicDomain, State, StochasticDomain
 from python.constants import *
 from python.policy import EntropyBasedPolicy, EpsilonGreedyPolicy, QLearningPolicy, RandomUniformPolicy, TrajectoryBasedQLearningPolicy
@@ -11,7 +10,6 @@ import random
 from python.utils import infinity_norm, plot_with_std
 from python.latex import *
 
-import matplotlib.pylab as plt
 import numpy as np
 
 def online(episodes, transitions, learning_rate, e, domains, labels, policies, initial_state, gamma, title, decay=1, replay=False):
@@ -224,8 +222,8 @@ if __name__ == "__main__":
 
     print("Computing policy...")
 
-    # _1(domains, labels, policies, initial_state)
-    #_2(domains, labels, policies, initial_state)
-    #_3(domains, labels, initial_state)
+    _1(domains, labels, policies, initial_state)
+    _2(domains, labels, policies, initial_state)
+    _3(domains, labels, initial_state)
     _4(domains, policies, labels, initial_state)
     
