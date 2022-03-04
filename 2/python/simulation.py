@@ -17,6 +17,10 @@ class Simulation():
         if remember_trajectory:
             self.trajectory = list()
 
+    """
+        Simulate (steps) steps on the domain, according to the policy
+        If remember_trajectory=True, each transition will be remembered
+    """
     def simulate(self, steps: int) -> None:
         for _ in range(steps):
             action = self.policy.make_action(self.state)
