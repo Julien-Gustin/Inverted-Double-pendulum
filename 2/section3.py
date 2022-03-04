@@ -23,11 +23,11 @@ if __name__=="__main__":
     initial_state = State(0, 0)
 
     policy = RandomActionPolicy()
-    simulation = Simulation(domain, policy, initial_state, remember_trajectory=True)
+    simulation = Simulation(domain, policy, initial_state, remember_trajectory=True, seed=42)
     simulation.simulate(steps)
     make_video("video/animation_random.avi", simulation.get_trajectory())
 
     policy = AlwaysAcceleratePolicy()
-    simulation = Simulation(domain, policy, initial_state, remember_trajectory=True)
+    simulation = Simulation(domain, policy, initial_state, remember_trajectory=True, seed=42)
     simulation.simulate(steps)
     make_video("video/animation_always_accelerate.avi", simulation.get_trajectory())
