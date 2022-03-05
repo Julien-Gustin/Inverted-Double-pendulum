@@ -36,10 +36,10 @@ class CarOnTheHillDomain():
         self.g = g 
 
     def _Hill(self, p: float) -> float:
-        return (p**2 + p) if p < 0 else p/(1+5*(p**2)**(0.5))
+        return (p**2 + p) if p < 0 else p/(np.math.sqrt(1+5*(p**2)))
 
     def _Hill_first(self, p: float) -> float:
-        return 2*p-1 if p < 0 else 1 / (1+5*p**2)**(1.5)
+        return 2*p + 1 if p < 0 else 1 / (1+5*p**2)**(1.5)
 
     def _Hill_second(self, p: float) -> float:
         return 2 if p < 0 else (-15*p)/(1+5*p**2)**(2.5)
@@ -65,7 +65,9 @@ class CarOnTheHillDomain():
     def r(self, state: State, action: int) -> int:
         if state.is_terminal():
             return 0
+        
         new_state = self.f(state, action)
+
         if new_state.p < -1 or np.abs(new_state.s) > 3:
             return -1
 

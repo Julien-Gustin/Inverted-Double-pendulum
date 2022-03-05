@@ -10,6 +10,10 @@ class AlwaysAcceleratePolicy():
     def make_action(self, state: State) -> int:
         return 4
 
+class AlwaysDesacceleratePolicy():
+    def make_action(self, state: State) -> int:
+        return -4
+
 class RandomActionPolicy():
     def make_action(self, state: State) -> int:
         return np.random.choice(ACTIONS)

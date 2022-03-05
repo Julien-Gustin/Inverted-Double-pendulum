@@ -38,9 +38,7 @@ class Fitted_Q():
 
     def compute_optimal_actions(self, states):
         """ Return the optimal action to perform in a given state """
-        # print(np.repeat(states, len(ACTIONS), axis=0), np.tile(np.array(ACTIONS), len(states)))
         X = np.c_[np.repeat(states, len(ACTIONS), axis=0), np.tile(np.array(ACTIONS), len(states))]
-        # print(X)
 
         y_pred = self.predict(X)
         y_pred = y_pred.reshape(-1, 2)

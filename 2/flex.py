@@ -21,6 +21,7 @@ def get_stopping_rule():
     return N
 
 
+
 def get_trajectories(trajectory_length, N):
     # Random
     random_policy = RandomActionPolicy()
@@ -30,21 +31,21 @@ def get_trajectories(trajectory_length, N):
 
     for n in range(N):
         initial_state = State.random_initial_state(seed=n)
-        simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=n)
+        simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=n, stop_when_terminal=True)
         simulation.simulate(trajectory_length)
-        random_trajectories.append(np.array(simulation.get_trajectory(values=True)).squeeze())
+        random_trajectories.extend(np.array(simulation.get_trajectory(values=True)).squeeze())
+        print(n, "/", N)
 
-    random_trajectories = np.concatenate(np.array(random_trajectories), axis=1)
-
+    random_trajectories = np.array(random_trajectories)
     return random_trajectories
     
 
 if __name__ == "__main__":
     domain = CarOnTheHillDomain(DISCOUNT_FACTOR, M, GRAVITY, TIME_STEP, INTEGRATION_TIME_STEP)
     initial_state = State.random_initial_state()
-    ETR = ExtraTreesRegressor(n_estimators=50)
+    ETR = ExtraTreesRegressor(n_estimators=30, n_jobs=-1)
     N = get_stopping_rule()
-    trajectories = get_trajectories(1000, 100)
+    trajectories = get_trajectories(500, 500)
 
     fitted_Q = Fitted_Q(ETR, N, DISCOUNT_FACTOR)
     fitted_Q.fit(trajectories)

@@ -9,6 +9,7 @@ def J_th(rewards, discount_factor):
     """ Take advantage of the problem statement to compute the expected return """
     t = np.where(rewards != 0)[0]
     if len(t) > 1:
+        print(t)
         print("Error")
 
     if len(t) == 0:
