@@ -21,8 +21,6 @@ class Simulation():
 
         np.random.seed(seed)
 
-
-
     """
         Simulate (steps) steps on the domain, according to the policy
         If remember_trajectory=True, each transition will be remembered
@@ -36,7 +34,11 @@ class Simulation():
             if self.trajectory is not None:
                 self.trajectory.append((previous_state, action, reward, self.state))
 
-    def get_trajectory(self) -> list:
+    def get_trajectory(self, values=False) -> list:
+        if values:
+            trajectory = [[*state.values(), action, reward, *next_state.values()] for state, action, reward, next_state in self.trajectory]
+            return trajectory
+
         return self.trajectory
 
 

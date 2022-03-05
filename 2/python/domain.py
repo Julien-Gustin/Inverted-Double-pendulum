@@ -11,13 +11,18 @@ class State:
         self.s = s
 
     @staticmethod
-    def random_initial_state():
+    def random_initial_state(seed=None):
+        if seed is not None:
+            np.random.seed(seed)
         p = np.random.uniform(-0.1, 0.1)
         s = 0
         return State(p, s)
 
     def is_terminal(self):
         return self.terminal
+
+    def values(self):
+        return self.p, self.s
 
     def __repr__(self) -> str: 
         return "(p={:.2f}, s={:.2f})".format(self.p, self.s)
