@@ -17,11 +17,34 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import ExtraTreesRegressor
 from section3 import make_video
 
-def get_stopping_rules():
+def infinity_norm(Q_hat, Q):
+    """Infinity norm of q"""
+    max_val = np.max(np.abs(Q_hat - Q))
+    return max_val
+
+def bound_stop(Q_hat):
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
+    steps = 0
+    while True:
+        if steps == N:
+            yield False
+        steps+=1
+        yield True
 
-    return N, None
+def distance_stop(Q_hat):
+    epsilon = 1e-3
+    prev_Q_hat = None 
+    while True:
+        if prev_Q_hat is None:
+            yield True
+        if infinity_norm(prev_Q_hat, Q_hat) <= epsilon:
+            yield False 
+        prev_Q_hat = Q_hat
+        yield True 
+
+def get_stopping_rules():
+    return (bound_stop, "bound"), (distance_stop, "distance")
 
 def get_models():
     LR = LinearRegression(n_jobs=-1)
@@ -32,11 +55,11 @@ def get_models():
 
 def get_trajectories(trajectory_length, N):
     # Random
+    domain = CarOnTheHillDomain()
     random_policy = RandomActionPolicy()
     random_trajectories = np.array([])
 
     random_trajectories = []
-
     for n in range(N):
         initial_state = State.random_initial_state(seed=n)
         simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=n, stop_when_terminal=True)
@@ -46,10 +69,24 @@ def get_trajectories(trajectory_length, N):
 
     random_trajectories = np.array(random_trajectories)
     
+    #the following will just contain a discretization of the state space in order to have an "exhaustive" list of length #X times #U
+    p_discretized = np.linspace(-1, 1, 200)
+    s_discretized = np.linspace(-3, 3, 600)
+    actions = ACTIONS
 
-    # TODO:
+    possible_trajectories = []
 
-    return random_trajectories, None
+    for p in p_discretized:
+        for s in s_discretized:
+            for u in actions:
+                starting_state = State(p, s)
+                reached_state = domain.f(starting_state, u)
+                reward = domain.r(starting_state, u)
+                possible_trajectories.append((starting_state, u, reward, reached_state))
+
+    possible_trajectories = np.array(possible_trajectories)
+
+    return (random_trajectories, "random one-steps"), (possible_trajectories, "exhaustive list")
 
 def plot_Q(model, title:str):
     p = np.linspace(-1, 1, 200)
@@ -109,21 +146,26 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(5000, 5000):
+    for trajectories in get_trajectories(500, 500):
         for stopping_rule in get_stopping_rules():
             for model in get_models():
-                fitted_Q = Fitted_Q(model, stopping_rule, DISCOUNT_FACTOR)
-                fitted_Q.fit(trajectories)
-                plot_Q(fitted_Q, model.__class__.__name__)
-                plot_mu(fitted_Q, model.__class__.__name__)
+                trajectory, trajectory_label = trajectories
+                rule, rule_label = stopping_rule
+
+                title = model.__class__.__name__ + "_" + trajectory_label + "_" + rule_label
+
+                fitted_Q = Fitted_Q(model, rule, DISCOUNT_FACTOR)
+
+                fitted_Q.fit(trajectory)
+
+                plot_Q(fitted_Q, title)
+                plot_mu(fitted_Q, title)
 
                 fitted_Q_policy = FittedQPolicy(fitted_Q)
                 
                 nb_simulation = 50
 
                 j = J(domain, fitted_Q_policy, DISCOUNT_FACTOR, nb_simulation, N)
-                print(j)
-                exit()
 
 
 

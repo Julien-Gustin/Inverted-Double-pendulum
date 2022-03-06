@@ -17,7 +17,7 @@ def make_video(output_video: str, trajectory: list):
     save_caronthehill_image(0, 0, "images/frame.png", close=True)
     video.release()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     steps = 600
     domain = CarOnTheHillDomain()
     initial_state = State(0, 0)
