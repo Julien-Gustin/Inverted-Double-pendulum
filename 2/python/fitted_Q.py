@@ -1,6 +1,5 @@
-from argparse import Action
-from sklearn.base import RegressorMixin, clone
-from python.domain import ACTIONS, State
+from sklearn.base import RegressorMixin
+from python.domain import ACTIONS
 import numpy as np
 
 class Fitted_Q():

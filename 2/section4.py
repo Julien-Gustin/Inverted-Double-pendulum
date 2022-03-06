@@ -50,29 +50,35 @@ def get_stopping_rules():
 def get_models():
     LR = LinearRegression(n_jobs=-1)
     ETR = ExtraTreesRegressor(n_estimators=30, random_state=42)
+
     # TODO: MLP
 
     return ETR, LR
 
-def get_trajectories(trajectory_length, N):
+def get_trajectories(nb_p=200, nb_s=600):
     # Random
     domain = CarOnTheHillDomain()
     random_policy = RandomActionPolicy()
     random_trajectories = np.array([])
 
     random_trajectories = []
-    for n in range(N):
+    
+    trajectory_length = 1000
+    n = 0
+    buffer_size = nb_p * nb_s
+    while len(random_trajectories) <= buffer_size:
         initial_state = State.random_initial_state(seed=n)
         simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=n, stop_when_terminal=True)
         simulation.simulate(trajectory_length)
         random_trajectories.extend(np.array(simulation.get_trajectory(values=True)).squeeze())
-        print("\r ", n, "/", N, end="\r")
+        print("\r ", len(random_trajectories), "/", buffer_size, end="\r")
+        n += 1
 
-    random_trajectories = np.array(random_trajectories)
+    random_trajectories = np.array(random_trajectories) 
     
     #the following will just contain a discretization of the state space in order to have an "exhaustive" list of length #X times #U
-    p_discretized = np.linspace(-1, 1, 200)
-    s_discretized = np.linspace(-3, 3, 600)
+    p_discretized = np.linspace(-1, 1, nb_p)
+    s_discretized = np.linspace(-3, 3, nb_s)
     actions = ACTIONS
 
     possible_trajectories = []
@@ -90,7 +96,7 @@ def get_trajectories(trajectory_length, N):
     return (random_trajectories, "random one-steps"), (possible_trajectories, "exhaustive list")
 
 def plot_Q(model, title:str):
-    p = np.linspace(-1, 1, 200)
+    p = np.linspace(-1, 1, 200)  
     s = np.linspace(-3, 3, 600)
 
     for action in ACTIONS:
@@ -147,7 +153,7 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(500, 500):
+    for trajectories in get_trajectories(200, 600):
         for stopping_rule in get_stopping_rules():
             for model in get_models():
                 trajectory, trajectory_label = trajectories
