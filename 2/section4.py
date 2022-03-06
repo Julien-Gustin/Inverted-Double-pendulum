@@ -38,9 +38,10 @@ def distance_stop(Q_hat):
     while True:
         if prev_Q_hat is None:
             yield True
-        if infinity_norm(prev_Q_hat, Q_hat) <= epsilon:
+        elif infinity_norm(prev_Q_hat, Q_hat) <= epsilon:
             yield False 
-        prev_Q_hat = Q_hat
+        else:
+            prev_Q_hat = Q_hat
         yield True 
 
 def get_stopping_rules():
