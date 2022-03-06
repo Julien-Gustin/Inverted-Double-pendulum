@@ -1,6 +1,5 @@
-from argparse import Action
-from sklearn.base import RegressorMixin, clone
-from python.domain import ACTIONS, State
+from sklearn.base import RegressorMixin
+from python.domain import ACTIONS
 import numpy as np
 
 class Fitted_Q():
@@ -34,8 +33,6 @@ class Fitted_Q():
 
             # When a terminal state is reached, it can not gain anymore rewards afterward
             y = np.where(terminal, rewards, self.discount_factor * max_u)
-
-            # y = rewards + self.discount_factor * max_u
 
     def predict(self, X):
         """ predict given state action pairs """

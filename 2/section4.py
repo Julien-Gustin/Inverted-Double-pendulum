@@ -26,6 +26,7 @@ def get_stopping_rules():
 def get_models():
     LR = LinearRegression(n_jobs=-1)
     ETR = ExtraTreesRegressor(n_estimators=30, random_state=42)
+
     # TODO: MLP
 
     return ETR, LR
@@ -44,7 +45,7 @@ def get_trajectories(trajectory_length, N):
         random_trajectories.extend(np.array(simulation.get_trajectory(values=True)).squeeze())
         print("\r ", n, "/", N, end="\r")
 
-    random_trajectories = np.array(random_trajectories)
+    random_trajectories = np.array(random_trajectories) 
     
 
     # TODO:
@@ -52,7 +53,7 @@ def get_trajectories(trajectory_length, N):
     return random_trajectories, None
 
 def plot_Q(model, title:str):
-    p = np.linspace(-1, 1, 200)
+    p = np.linspace(-1, 1, 200)  
     s = np.linspace(-3, 3, 600)
 
     for action in ACTIONS:
@@ -109,12 +110,12 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(5000, 5000):
+    for trajectories in get_trajectories(1000, 1000):
         for stopping_rule in get_stopping_rules():
             for model in get_models():
                 fitted_Q = Fitted_Q(model, stopping_rule, DISCOUNT_FACTOR)
                 fitted_Q.fit(trajectories)
-                plot_Q(fitted_Q, model.__class__.__name__)
+                plot_Q(fitted_Q, model.__class__.__name__) # add stopping rule 
                 plot_mu(fitted_Q, model.__class__.__name__)
 
                 fitted_Q_policy = FittedQPolicy(fitted_Q)
