@@ -13,39 +13,21 @@ import math
 
 from sklearn.ensemble import ExtraTreesRegressor
 from section3 import make_video
-
-def get_stopping_rule():
-    epsilon = 1e-3
-    N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
-
-    return N
+from section4 import get_trajectories, get_stopping_rules
 
 
-
-def get_trajectories(trajectory_length, N):
-    # Random
-    random_policy = RandomActionPolicy()
-    random_trajectories = np.array([])
-
-    random_trajectories = []
-
-    for n in range(N):
-        initial_state = State.random_initial_state(seed=n)
-        simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=n, stop_when_terminal=True)
-        simulation.simulate(trajectory_length)
-        random_trajectories.extend(np.array(simulation.get_trajectory(values=True)).squeeze())
-        print(n, "/", N)
-
-    random_trajectories = np.array(random_trajectories)
-    return random_trajectories
     
 
 if __name__ == "__main__":
     domain = CarOnTheHillDomain(DISCOUNT_FACTOR, M, GRAVITY, TIME_STEP, INTEGRATION_TIME_STEP)
     initial_state = State.random_initial_state()
     ETR = ExtraTreesRegressor(n_estimators=30, n_jobs=-1)
-    N = get_stopping_rule()
-    trajectories = get_trajectories(500, 500)
+
+    epsilon = 1e-3
+    N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
+
+    stopping_rule = get_stopping_rules()[0][0]
+    trajectories = get_trajectories(1, 3)[1][0]
 
     fitted_Q = Fitted_Q(ETR, N, DISCOUNT_FACTOR)
     fitted_Q.fit(trajectories)

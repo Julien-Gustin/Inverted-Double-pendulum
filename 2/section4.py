@@ -64,7 +64,7 @@ def get_trajectories(nb_p=200, nb_s=600):
     
     trajectory_length = 1000
     n = 0
-    buffer_size = nb_p * nb_s
+    buffer_size = nb_p * nb_s * 2
     while len(random_trajectories) <= buffer_size:
         initial_state = State.random_initial_state(seed=n)
         simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=n, stop_when_terminal=True)
@@ -73,7 +73,7 @@ def get_trajectories(nb_p=200, nb_s=600):
         print("\r ", len(random_trajectories), "/", buffer_size, end="\r")
         n += 1
 
-    random_trajectories = np.array(random_trajectories) 
+    random_trajectories = np.array(random_trajectories[:buffer_size]) 
     
     #the following will just contain a discretization of the state space in order to have an "exhaustive" list of length #X times #U
     p_discretized = np.linspace(-1, 1, nb_p)
@@ -88,9 +88,12 @@ def get_trajectories(nb_p=200, nb_s=600):
                 starting_state = State(p, s)
                 reached_state = domain.f(starting_state, u)
                 reward = domain.r(starting_state, u)
-                possible_trajectories.append((starting_state, u, reward, reached_state))
+                possible_trajectories.append(np.array([*starting_state.values(), u, reward, *reached_state.values()]))
 
     possible_trajectories = np.array(possible_trajectories)
+    print(random_trajectories)
+    print(possible_trajectories)
+    print(possible_trajectories[:, [0,1,2]])
 
     return (random_trajectories, "random one-steps"), (possible_trajectories, "exhaustive list")
 
@@ -105,7 +108,6 @@ def plot_Q(model, title:str):
         gridshape = pp.shape
 
         y_pred = model.predict(stateaction).reshape(gridshape[:-1])
-        print(y_pred)
 
         plt.pcolormesh(
         p[:-1], s[:-1], y_pred.T,
@@ -152,7 +154,7 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(200, 600):
+    for trajectories in get_trajectories(150, 450):
         for stopping_rule in get_stopping_rules():
             for model in get_models():
                 trajectory, trajectory_label = trajectories
@@ -169,9 +171,10 @@ if __name__ == "__main__":
 
                 fitted_Q_policy = FittedQPolicy(fitted_Q)
                 
-                nb_simulation = 50
+                nb_simulation = 100
 
                 j = J(domain, fitted_Q_policy, DISCOUNT_FACTOR, nb_simulation, N)
+                print("Expected return of {} using {} trajectory generator and {} stopping rule:\n\t {}".format(model.__class__.__name__, trajectory_label, rule_label, j))
 
 
 

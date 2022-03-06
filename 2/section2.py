@@ -1,6 +1,6 @@
 from python.constants import *
 from python.domain import CarOnTheHillDomain
-from python.policy import AlwaysAcceleratePolicy
+from python.policy import AlwaysAcceleratePolicy, RandomActionPolicy
 from python.expected_return import J
 
 import math
@@ -16,12 +16,13 @@ flags = {
 
 if __name__ == "__main__":
     epsilon = 1e-3
-    N = math.ceil(math.log((epsilon / B_r), DISCOUNT_FACTOR))
+    N = math.ceil(math.log((epsilon * (1.0-DISCOUNT_FACTOR))/ B_r, DISCOUNT_FACTOR))
+    print("N =",N)
 
     domain = CarOnTheHillDomain(DISCOUNT_FACTOR, M, GRAVITY, TIME_STEP, INTEGRATION_TIME_STEP)
     policy = AlwaysAcceleratePolicy()
 
-    nb_simulations = 50
+    nb_simulations = 100
 
     Jn = J(domain, policy, DISCOUNT_FACTOR, nb_simulations, N, save=True)
 
@@ -33,5 +34,6 @@ if __name__ == "__main__":
     plt.ylabel(r'$J^{\mu}_{\infty}$')
     plt.grid()
     plt.savefig("figures/Jn")
+
 
     plt.close()
