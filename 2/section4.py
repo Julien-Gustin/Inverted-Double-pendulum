@@ -22,7 +22,7 @@ def infinity_norm(Q_hat, Q):
     max_val = np.max(np.abs(Q_hat - Q))
     return max_val
 
-def bound_stop(Q_hat):
+def bound_stop():
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
     steps = 0
@@ -32,19 +32,23 @@ def bound_stop(Q_hat):
         steps+=1
         yield True
 
-def distance_stop(Q_hat):
-    epsilon = 1e-3
-    prev_Q_hat = None 
+def distance_stop():
+    epsilon = 0.45
+    prev_Q_hat = None
+    current_Q_hat = None 
     while True:
         if prev_Q_hat is None:
-            yield True
-        if infinity_norm(prev_Q_hat, Q_hat) <= epsilon:
+            prev_Q_hat = yield True
+        if current_Q_hat is None:
+            current_Q_hat = yield True 
+        if infinity_norm(prev_Q_hat, current_Q_hat) <= epsilon:
             yield False 
-        prev_Q_hat = Q_hat
-        yield True 
+        else:
+            prev_Q_hat = current_Q_hat
+            current_Q_hat = yield True
 
 def get_stopping_rules():
-    return (bound_stop, "bound"), (distance_stop, "distance")
+    return (distance_stop, "distance"), (bound_stop, "bound")
 
 def get_models():
     LR = LinearRegression(n_jobs=-1)
@@ -98,8 +102,8 @@ def get_trajectories(nb_p=200, nb_s=600):
     return (random_trajectories, "random one-steps"), (possible_trajectories, "exhaustive list")
 
 def plot_Q(model, title:str):
-    p = np.linspace(-1, 1, 200)  
-    s = np.linspace(-3, 3, 600)
+    p = np.linspace(-1, 1, 100)  
+    s = np.linspace(-3, 3, 300)
 
     for action in ACTIONS:
         pp, ss, uu = np.meshgrid(p[:-1], s[:-1], np.array([action]), indexing='ij')
@@ -161,6 +165,8 @@ if __name__ == "__main__":
                 rule, rule_label = stopping_rule
 
                 title = model.__class__.__name__ + "_" + trajectory_label + "_" + rule_label
+
+                print(title)
 
                 fitted_Q = Fitted_Q(model, rule, DISCOUNT_FACTOR)
 
