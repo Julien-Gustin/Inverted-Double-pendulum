@@ -27,8 +27,8 @@ class Fitted_Q():
         terminal = rewards != 0
         Q_hat = None
 
-        stop_condition = self.stop(Q_hat)
-        while next(stop_condition):
+        stop_condition = self.stop()
+        while stop_condition.send(Q_hat):
             self.model.fit(X, y)
             Q_hat = self.model.predict(X_1).reshape(-1, 2)
 
