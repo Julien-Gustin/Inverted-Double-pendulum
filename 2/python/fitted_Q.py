@@ -3,13 +3,13 @@ from python.domain import ACTIONS
 import numpy as np
 
 class Fitted_Q():
-    def __init__(self, model:RegressorMixin, N:int, discount_factor:float) -> None:
+    def __init__(self, model:RegressorMixin, stop, discount_factor:float) -> None:
         self.model = model
 
-        if N is None:
+        if stop is None:
             exit() # TODO
 
-        self.N = N
+        self.stop = stop
         self.discount_factor = discount_factor
 
     def fit(self, trajectories: list): # trajectories = [(x0, u0, r0, x1), (x10, u10, r10, x11)]
@@ -20,12 +20,15 @@ class Fitted_Q():
         y = rewards 
 
         next_states = trajectories[:, [4, 5]]
+
         # generate combination of [state action] pairs
         X_1 = np.c_[np.repeat(next_states, 2, axis=0), np.tile(np.array(ACTIONS), len(next_states))] 
 
         terminal = rewards != 0
+        Q_hat = None
 
-        for _ in range(self.N):
+        stop_condition = self.stop(Q_hat)
+        while next(stop_condition):
             self.model.fit(X, y)
             Q_hat = self.model.predict(X_1).reshape(-1, 2)
 
