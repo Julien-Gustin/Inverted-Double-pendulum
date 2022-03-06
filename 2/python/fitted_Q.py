@@ -24,13 +24,18 @@ class Fitted_Q():
         # generate combination of [state action] pairs
         X_1 = np.c_[np.repeat(next_states, 2, axis=0), np.tile(np.array(ACTIONS), len(next_states))] 
 
+        terminal = rewards != 0
+
         for _ in range(self.N):
             self.model.fit(X, y)
             Q_hat = self.model.predict(X_1).reshape(-1, 2)
 
             max_u = Q_hat.max(axis=1) # extract the  values doing the best actions
 
-            y = rewards + self.discount_factor * max_u
+            # When a terminal state is reached, it can not gain anymore rewards afterward
+            y = np.where(terminal, rewards, self.discount_factor * max_u)
+
+            # y = rewards + self.discount_factor * max_u
 
     def predict(self, X):
         """ predict given state action pairs """

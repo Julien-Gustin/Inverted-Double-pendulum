@@ -3,9 +3,10 @@ import numpy as np
 ACTIONS = [4, -4] #Action space discrete ? written as {-4, 4} and not [-4, 4] in the assignment
 
 class State:
+
     def __init__(self, p: float, s: float):
         self.terminal = False
-        if np.abs(p) > 1 or np.abs(s) > 3:
+        if (p < -1 or np.abs(s) > 3) or (p > 1 and np.abs(s) <=3):
             self.terminal = True 
         self.p = p
         self.s = s

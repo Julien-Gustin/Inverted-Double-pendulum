@@ -10,7 +10,7 @@ class Simulation():
         remember_trajectory: if true, it keeps track of the trajectory done by the simulator
         initial_state: initial state on the domain
     """
-    def __init__(self, domain: CarOnTheHillDomain, policy: Policy, initial_state: State, remember_trajectory=False, seed=43, stop_when_terminal=False) -> None:
+    def __init__(self, domain: CarOnTheHillDomain, policy: Policy, initial_state: State, remember_trajectory=False, seed=43, stop_when_terminal=True) -> None:
         self.domain = domain
         self.policy = policy
         self.state = initial_state
@@ -34,7 +34,8 @@ class Simulation():
             action = self.policy.make_action(self.state)
             previous_state = self.state
             self.state = self.domain.f(self.state, action)
-            reward = self.domain.r(self.state, action)
+            reward = self.domain.r(previous_state, action)
+            
             if self.trajectory is not None:
                 self.trajectory.append((previous_state, action, reward, self.state))
 
