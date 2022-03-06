@@ -95,9 +95,6 @@ def get_trajectories(nb_p=200, nb_s=600):
                 possible_trajectories.append(np.array([*starting_state.values(), u, reward, *reached_state.values()]))
 
     possible_trajectories = np.array(possible_trajectories)
-    print(random_trajectories)
-    print(possible_trajectories)
-    print(possible_trajectories[:, [0,1,2]])
 
     return (random_trajectories, "random one-steps"), (possible_trajectories, "exhaustive list")
 

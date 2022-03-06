@@ -29,7 +29,7 @@ if __name__ == "__main__":
     stopping_rule = get_stopping_rules()[0][0]
     trajectories = get_trajectories(1, 3)[1][0]
 
-    fitted_Q = Fitted_Q(ETR, N, DISCOUNT_FACTOR)
+    fitted_Q = Fitted_Q(ETR, stopping_rule, DISCOUNT_FACTOR)
     fitted_Q.fit(trajectories)
 
     fitted_q_policy = FittedQPolicy(fitted_Q)
