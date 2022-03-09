@@ -36,6 +36,7 @@ class Fitted_Q():
 
             # When a terminal state is reached, it can not gain anymore rewards afterward
             y = np.where(terminal, rewards, self.discount_factor * max_u)
+            print(y)
 
     def predict(self, X):
         """ predict given state action pairs """

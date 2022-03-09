@@ -3,7 +3,7 @@ from python.domain import ACTIONS, State, CarOnTheHillDomain
 from python.policy import AlwaysAcceleratePolicy, RandomActionPolicy, FittedQPolicy
 from python.simulation import Simulation
 from python.fitted_Q import Fitted_Q
-
+from python.neural_network import NN
 import numpy as np
 
 from python.constants import *
@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import ExtraTreesRegressor
-from section3 import make_video
 
 def infinity_norm(Q_hat, Q):
     """Infinity norm of q"""
@@ -23,7 +22,7 @@ def infinity_norm(Q_hat, Q):
     return max_val
 
 def bound_stop():
-    epsilon = 1e-3
+    epsilon = 1e-2
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
     steps = 0
     while True:
@@ -48,15 +47,13 @@ def distance_stop():
             current_Q_hat = yield True
 
 def get_stopping_rules():
-    return (distance_stop, "distance"), (bound_stop, "bound")
+    return (bound_stop, "bound"), (distance_stop, "distance")
 
 def get_models():
     LR = LinearRegression(n_jobs=-1)
     ETR = ExtraTreesRegressor(n_estimators=30, random_state=42)
-
-    # TODO: MLP
-
-    return ETR, LR
+    NEURAL_NET = NN(layers=2, neurons=5, output=1, epochs=5, batch_size=32, activation="sigmoid")
+    return NEURAL_NET, ETR, LR
 
 def get_trajectories(nb_p=200, nb_s=600):
     # Random
@@ -66,7 +63,7 @@ def get_trajectories(nb_p=200, nb_s=600):
 
     random_trajectories = []
     
-    trajectory_length = 1000
+    trajectory_length = 250
     n = 0
     buffer_size = nb_p * nb_s * 2
     while len(random_trajectories) <= buffer_size:
@@ -155,7 +152,7 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(100, 300):
+    for trajectories in get_trajectories(50, 150):
         for stopping_rule in get_stopping_rules():
             for model in get_models():
                 trajectory, trajectory_label = trajectories
@@ -166,16 +163,17 @@ if __name__ == "__main__":
                 print(title)
 
                 fitted_Q = Fitted_Q(model, rule, DISCOUNT_FACTOR)
-
+                print("fit")
                 fitted_Q.fit(trajectory)
-
+                print("Q")
                 plot_Q(fitted_Q, title)
+                print("mu")
                 plot_mu(fitted_Q, title)
 
                 fitted_Q_policy = FittedQPolicy(fitted_Q)
                 
                 nb_simulation = 100
-
+                print("j")
                 j = J(domain, fitted_Q_policy, DISCOUNT_FACTOR, nb_simulation, N)
                 print("Expected return of {} using {} trajectory generator and {} stopping rule:\n\t {}".format(model.__class__.__name__, trajectory_label, rule_label, j))
 
