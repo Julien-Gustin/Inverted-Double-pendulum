@@ -53,7 +53,7 @@ def get_models():
     LR = LinearRegression(n_jobs=-1)
     ETR = ExtraTreesRegressor(n_estimators=30, random_state=42)
     NEURAL_NET = NN(layers=2, neurons=5, output=1, epochs=5, batch_size=32, activation="sigmoid")
-    return NEURAL_NET, ETR, LR
+    return ETR, LR
 
 def get_trajectories(nb_p=200, nb_s=600):
     # Random
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(50, 150):
+    for trajectories in get_trajectories(100, 300):
         for stopping_rule in get_stopping_rules():
             for model in get_models():
                 trajectory, trajectory_label = trajectories

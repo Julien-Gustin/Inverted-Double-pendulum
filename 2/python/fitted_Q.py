@@ -26,8 +26,8 @@ class Fitted_Q():
 
         terminal = rewards != 0
         Q_hat = None
-
         stop_condition = self.stop()
+        
         while stop_condition.send(Q_hat):
             self.model.fit(X, y)
             Q_hat = self.model.predict(X_1).reshape(-1, 2)
@@ -36,7 +36,6 @@ class Fitted_Q():
 
             # When a terminal state is reached, it can not gain anymore rewards afterward
             y = np.where(terminal, rewards, self.discount_factor * max_u)
-            print(y)
 
     def predict(self, X):
         """ predict given state action pairs """
