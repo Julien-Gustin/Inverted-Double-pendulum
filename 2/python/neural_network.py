@@ -16,12 +16,14 @@ class NN(keras.Sequential):
         for _ in range(layers):
             self.add(keras.layers.Dense(neurons, activation=self.activation, kernel_initializer=keras.initializers.RandomUniform(-0.5, 0.5), bias_initializer=keras.initializers.RandomUniform(-0.5, 0.5)))
 
-        self.add(keras.layers.Dense(output, activation, kernel_initializer=keras.initializers.RandomUniform(-0.5, 0.5), bias_initializer=keras.initializers.RandomUniform(-0.5, 0.5)))
+        self.add(keras.layers.Dense(output, kernel_initializer=keras.initializers.RandomUniform(-0.5, 0.5), bias_initializer=keras.initializers.RandomUniform(-0.5, 0.5)))
         self.compile(loss="mse", optimizer="adam")
         self.epochs = epochs
         self.batch_size = batch_size
 
 
-    def fit(self, X, y):
-        self.__init__(self.n_layers, self.neurons, 1, self.epochs, self.batch_size)
-        super().fit(X, y, epochs=self.epochs, batch_size=self.batch_size, verbose=False)
+    def fit(self, *args, **kwargs):
+        kwargs.setdefault('batch_size', self.batch_size)
+        kwargs.setdefault('epochs', self.epochs)
+        kwargs.setdefault('verbose', False)
+        super().fit(*args, **kwargs)

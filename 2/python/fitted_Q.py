@@ -3,8 +3,9 @@ from python.domain import ACTIONS
 import numpy as np
 
 class Fitted_Q():
-    def __init__(self, model:RegressorMixin, stop, discount_factor:float) -> None:
-        self.model = model
+    def __init__(self, get_model, stop, discount_factor:float) -> None:
+        self.model = None
+        self.get_model = get_model
 
         if stop is None:
             exit() # TODO
@@ -25,17 +26,33 @@ class Fitted_Q():
         X_1 = np.c_[np.repeat(next_states, 2, axis=0), np.tile(np.array(ACTIONS), len(next_states))] 
 
         terminal = rewards != 0
+
         Q_hat = None
-        stop_condition = self.stop()
+        prev_Q = None
+        n = 0
+
+        model = None
+
         
-        while stop_condition.send(Q_hat):
-            self.model.fit(X, y)
-            Q_hat = self.model.predict(X_1).reshape(-1, 2)
+        while True:
+            model = self.get_model()
+            model.fit(X, y)
+
+            Q_hat = model.predict(X_1).reshape(-1, 2)
 
             max_u = Q_hat.max(axis=1) # extract the  values doing the best actions
 
             # When a terminal state is reached, it can not gain anymore rewards afterward
-            y = np.where(terminal, rewards, self.discount_factor * max_u)
+            y = np.where(terminal, rewards, rewards + self.discount_factor * max_u)
+
+            if self.stop(n, prev_Q, Q_hat):
+                break
+
+            prev_Q = Q_hat
+            n += 1
+            del model
+
+        self.model = model
 
     def predict(self, X):
         """ predict given state action pairs """

@@ -22,7 +22,7 @@ if __name__ == "__main__":
     domain = CarOnTheHillDomain(DISCOUNT_FACTOR, M, GRAVITY, TIME_STEP, INTEGRATION_TIME_STEP)
     policy = AlwaysAcceleratePolicy()
 
-    nb_simulations = 100
+    nb_simulations = 50
 
     Jn = J(domain, policy, DISCOUNT_FACTOR, nb_simulations, N, save=True)
 

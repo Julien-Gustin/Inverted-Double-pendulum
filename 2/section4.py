@@ -21,41 +21,32 @@ def infinity_norm(Q_hat, Q):
     max_val = np.max(np.abs(Q_hat - Q))
     return max_val
 
-def bound_stop():
+# remove yield
+def bound_stop(current_n, prev_Q_hat, current_Q_hat):
     epsilon = 1e-2
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
-    steps = 0
-    while True:
-        if steps == N:
-            yield False
-        steps+=1
-        yield True
+    return current_n > N
 
-def distance_stop():
+def distance_stop(current_n, prev_Q_hat, current_Q_hat):
     epsilon = 0.45
-    prev_Q_hat = None
-    current_Q_hat = None 
-    while True:
-        if prev_Q_hat is None:
-            prev_Q_hat = yield True
-        if current_Q_hat is None:
-            current_Q_hat = yield True 
-        if infinity_norm(prev_Q_hat, current_Q_hat) <= epsilon:
-            yield False 
-        else:
-            prev_Q_hat = current_Q_hat
-            current_Q_hat = yield True
+
+    if prev_Q_hat is None or current_Q_hat is None:
+        return False
+
+    return infinity_norm(prev_Q_hat, current_Q_hat) <= epsilon
+
 
 def get_stopping_rules():
     return (bound_stop, "bound"), (distance_stop, "distance")
 
 def get_models():
-    LR = LinearRegression(n_jobs=-1)
-    ETR = ExtraTreesRegressor(n_estimators=30, random_state=42)
-    NEURAL_NET = NN(layers=2, neurons=5, output=1, epochs=5, batch_size=32, activation="sigmoid")
-    return ETR, LR
+    LR =  lambda : LinearRegression(n_jobs=-1)
+    ETR = lambda : ExtraTreesRegressor(n_estimators=30, random_state=42)
+    NEURAL_NET = lambda : NN(layers=3, neurons=8, output=1, epochs=10, batch_size=32, activation="relu")
 
-def get_trajectories(nb_p=200, nb_s=600):
+    return NEURAL_NET, ETR, LR
+
+def get_trajectories(nb_p, nb_s):
     # Random
     domain = CarOnTheHillDomain()
     random_policy = RandomActionPolicy()
@@ -152,30 +143,26 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(100, 300):
+    for trajectories in get_trajectories(115, 345):
         for stopping_rule in get_stopping_rules():
-            for model in get_models():
+            for get_model in get_models():
                 trajectory, trajectory_label = trajectories
                 rule, rule_label = stopping_rule
 
-                title = model.__class__.__name__ + "_" + trajectory_label + "_" + rule_label
+                title = get_model().__class__.__name__ + "_" + trajectory_label + "_" + rule_label
 
                 print(title)
 
-                fitted_Q = Fitted_Q(model, rule, DISCOUNT_FACTOR)
-                print("fit")
+                fitted_Q = Fitted_Q(get_model, rule, DISCOUNT_FACTOR)
                 fitted_Q.fit(trajectory)
-                print("Q")
                 plot_Q(fitted_Q, title)
-                print("mu")
                 plot_mu(fitted_Q, title)
 
                 fitted_Q_policy = FittedQPolicy(fitted_Q)
                 
-                nb_simulation = 100
-                print("j")
+                nb_simulation = 50
                 j = J(domain, fitted_Q_policy, DISCOUNT_FACTOR, nb_simulation, N)
-                print("Expected return of {} using {} trajectory generator and {} stopping rule:\n\t {}".format(model.__class__.__name__, trajectory_label, rule_label, j))
+                print("Expected return of {} using {} trajectory generator and {} stopping rule:\n\t {}".format(get_model().__class__.__name__, trajectory_label, rule_label, j))
 
 
 
