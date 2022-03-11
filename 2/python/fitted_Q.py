@@ -3,6 +3,7 @@ from python.domain import ACTIONS
 import numpy as np
 
 def correct_domain(y):
+    """ The expected reward should be at most 1 and at minimum -1"""
     if y is float:
         if y < -1:
             return -1
@@ -12,7 +13,7 @@ def correct_domain(y):
 
         return y
 
-    to_low = y > -1
+    to_low = y < -1
     to_high = y > 1
 
 

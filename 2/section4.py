@@ -145,7 +145,7 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(2, 6):#(115, 345):
+    for trajectories in get_trajectories(115, 345):
         for stopping_rule in get_stopping_rules():
             for get_model in get_models():
                 trajectory, trajectory_label = trajectories
