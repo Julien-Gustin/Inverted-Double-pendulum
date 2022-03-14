@@ -33,8 +33,6 @@ def distance_stop(current_n, prev_Q_hat, current_Q_hat):
     if prev_Q_hat is None or current_Q_hat is None:
         return False
 
-    print( infinity_norm(prev_Q_hat, current_Q_hat))
-
     return infinity_norm(prev_Q_hat, current_Q_hat) <= epsilon
 
 
@@ -44,9 +42,9 @@ def get_stopping_rules():
 def get_models():
     LR =  lambda : LinearRegression(n_jobs=-1)
     ETR = lambda : ExtraTreesRegressor(n_estimators=30, random_state=42)
-    NEURAL_NET = lambda : NN(layers=3, neurons=8, output=1, epochs=10, batch_size=32, activation="relu")
+    NEURAL_NET = lambda : NN(layers=2, neurons=5, output=1, epochs=10, batch_size=32, activation="relu")
 
-    return [NEURAL_NET]#, ETR, LR
+    return NEURAL_NET, ETR, LR
 
 def get_trajectories(nb_p, nb_s):
     # Random
@@ -56,7 +54,7 @@ def get_trajectories(nb_p, nb_s):
 
     random_trajectories = []
     
-    trajectory_length = 250
+    trajectory_length = 1000
     n = 0
     buffer_size = nb_p * nb_s * 2
     while len(random_trajectories) <= buffer_size:
@@ -145,7 +143,7 @@ if __name__ == "__main__":
     epsilon = 1e-3
     N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
 
-    for trajectories in get_trajectories(115, 345):
+    for trajectories in get_trajectories(100, 300):
         for stopping_rule in get_stopping_rules():
             for get_model in get_models():
                 trajectory, trajectory_label = trajectories

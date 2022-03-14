@@ -24,3 +24,10 @@ class FittedQPolicy():
 
     def make_action(self, state:State) -> int:
         return self.fitted_q.compute_optimal_actions(np.array([state.values()]))
+
+class ParameterQPolicy():
+    def __init__(self, parameter_Q):
+        self.parameter_Q = parameter_Q
+
+    def make_action(self, state:State):
+        return self.parameter_Q.compute_optimal_actions(np.array([state.values()]))
