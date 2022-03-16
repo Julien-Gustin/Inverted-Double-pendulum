@@ -14,6 +14,7 @@ class State:
     def random_initial_state(seed=None):
         if seed is not None:
             np.random.seed(seed)
+
         p = np.random.uniform(-0.1, 0.1)
         s = 0
         return State(p, s)

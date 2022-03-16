@@ -21,10 +21,9 @@ def infinity_norm(Q_hat, Q):
     max_val = np.max(np.abs(Q_hat - Q))
     return max_val
 
-# remove yield
 def bound_stop(current_n, prev_Q_hat, current_Q_hat):
     epsilon = 1e-2
-    N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
+    N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR) ** 2, DISCOUNT_FACTOR))
     return current_n > N
 
 def distance_stop(current_n, prev_Q_hat, current_Q_hat):
@@ -141,7 +140,7 @@ def plot_mu(model, title:str):
 if __name__ == "__main__":
     domain = CarOnTheHillDomain(DISCOUNT_FACTOR, M, GRAVITY, TIME_STEP, INTEGRATION_TIME_STEP)
     epsilon = 1e-3
-    N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
+    N = math.ceil(math.log((epsilon / (2 * B_r)) * (1. - DISCOUNT_FACTOR) ** 2, DISCOUNT_FACTOR))
 
     for trajectories in get_trajectories(100, 300):
         for stopping_rule in get_stopping_rules():

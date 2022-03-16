@@ -22,20 +22,30 @@ class Simulation():
 
         np.random.seed(seed)
 
-    """
+    def step(self, values=False):
+        """
+        Simulate one step of the policy
+        """
+        action = self.policy.make_action(self.state)
+        previous_state = self.state
+        self.state = self.domain.f(self.state, action)
+        reward = self.domain.r(previous_state, action) 
+
+        if values:
+            return (*previous_state.values(), action, reward, *self.state.values())
+
+        return previous_state, action, reward, self.state
+
+    def simulate(self, steps: int) -> None:
+        """
         Simulate (steps) steps on the domain, according to the policy
         If remember_trajectory=True, each transition will be remembered
-    """
-    def simulate(self, steps: int) -> None:
+        """
         for _ in range(steps):
             if self.stop_when_terminal and self.state.is_terminal():
                 return
+            previous_state, action, reward, _ = self.step()
 
-            action = self.policy.make_action(self.state)
-            previous_state = self.state
-            self.state = self.domain.f(self.state, action)
-            reward = self.domain.r(previous_state, action)
-            
             if self.trajectory is not None:
                 self.trajectory.append((previous_state, action, reward, self.state))
 
