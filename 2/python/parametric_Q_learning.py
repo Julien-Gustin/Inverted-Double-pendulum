@@ -33,18 +33,8 @@ class ParametricQLearning():
     def __init__(self, model) -> None:
         self.model = model
         self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        self.criterion = torch.nn.MSELoss()
         self.gamma = 0.95
-
-
-    def _loss(self, pred_Q_t, pred_Q_t_1, rewards):
-        terminal = rewards != 0
-        with torch.no_grad():
-            max_pred_Q_t_1 = pred_Q_t_1.reshape(-1, 2).max(dim=1)[0].view(-1)
-            max_pred_Q_t_1_corrected = torch.where(terminal, rewards, self.gamma * max_pred_Q_t_1)
-            delta = pred_Q_t - max_pred_Q_t_1_corrected
-        
-        return (delta * pred_Q_t).mean()
-
 
     def fit(self, loader:StateActionDataset, nb_epoch):
 
@@ -57,17 +47,22 @@ class ParametricQLearning():
                 pred_Q_t = self.model(X)
                 with torch.no_grad():
                     pred_Q_t_1 = self.model(X_1)
+                    max_pred_Q_t_1 = pred_Q_t_1.reshape(-1, 2).max(dim=1)[0].view(-1)
+                    target = torch.where(rewards != 0, rewards, self.gamma * max_pred_Q_t_1)
+                    target = torch.unsqueeze(target, 1)
 
-                self.optimizer.zero_grad()
-                loss = self._loss(pred_Q_t, pred_Q_t_1, rewards)
+                loss = self.criterion(pred_Q_t, target)
+                # loss = self._loss(pred_Q_t, pred_Q_t_1, rewards)
                 loss.backward()
 
                 self.optimizer.step()
-
+                self.optimizer.zero_grad()
                 losses.append(loss.detach().numpy())
 
             train_loss.append(np.array(losses).mean())
-            print("\r", epoch,  "/", nb_epoch, end="\r")
+
+            print("\r", '[Epoch {}/{}] '.format(epoch+1, nb_epoch) +
+                        'loss: {:.4f} '.format(train_loss[-1]), end="\r")
 
         return train_loss
 
@@ -106,40 +101,37 @@ class OnlineParametricQLearning(ParametricQLearning):
 
         simulator = Simulation(self.domain, self.policy, State.random_initial_state(seed=0), seed=42)
         while n < N:
-            if simulator.state.is_terminal():
-                simulator = Simulation(self.domain, self.policy, State.random_initial_state(seed=n), seed=n)
+            with torch.no_grad():
+                if simulator.state.is_terminal():
+                    simulator = Simulation(self.domain, self.policy, State.random_initial_state(seed=n), seed=n)
 
-            prec_state = simulator.state
-            trajectories.append([prec_state, None, None, None])
+                prec_state = simulator.state
+                trajectories.append([prec_state, None, None, None])
 
-            p_prec, s_prec, action, reward, p, s = simulator.step(values=True)
+                p_prec, s_prec, action, reward, p, s = simulator.step(values=True)
 
             pred_Q_t = self.model(torch.Tensor([[p_prec, s_prec, action]]))
 
             with torch.no_grad():
                 pred_Q_t_1 = self.model(torch.Tensor([[p, s, ACTIONS[0]], [p, s, ACTIONS[1]]]))
+                max_pred_Q_t_1 = pred_Q_t_1.reshape(-1, 2).max(dim=1)[0].view(-1)[0]
+                reward = torch.Tensor([reward])
+                target = torch.where(reward != 0, reward, self.gamma * max_pred_Q_t_1)
+                target = torch.unsqueeze(target, 1)
 
-            print("\r", n , "/", N, end="\r")
 
-            self.optimizer.zero_grad()
-            loss = self._loss(pred_Q_t, pred_Q_t_1, torch.Tensor([reward]))
+            loss = self.criterion(pred_Q_t, target)
             loss.backward()
 
-            ## Gradient norm, https://jermwatt.github.io/machine_learning_refined/notes/3_First_order_methods/3_9_Normalized.html
-
-            # norm = torch.norm
-
-
-            norm = torch.norm(torch.stack([
-                torch.norm(p.grad, 2.)
-                for p in self.model.parameters()
-            ]), 2.)
-
-            ## Normalize
-            for p in self.model.parameters():
-                p.grad /= norm + 1e-7
+            #Normalized Gradient Descent https://jermwatt.github.io/machine_learning_refined/notes/3_First_order_methods/3_9_Normalized.html
+            concatenate_grad = torch.cat([theta.grad.flatten() for theta in self.model.parameters()])
+            norm = torch.norm(concatenate_grad, 2.)
+        
+            for theta in self.model.parameters():
+                theta.grad /= norm + 1e-7
 
             self.optimizer.step()
+            self.optimizer.zero_grad()
 
             n += 1
 

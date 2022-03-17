@@ -25,7 +25,7 @@ def J(domain: CarOnTheHillDomain, policy: Policy, discount_factor:float, nb_simu
     J_n = np.zeros((nb_simulations, trajectory_length))
 
     for i in range(nb_simulations):
-        initial_state = State.random_initial_state()
+        initial_state = State.random_initial_state(seed=nb_simulations*seed + i)
 
         simulation = Simulation(domain, policy, initial_state, remember_trajectory=True, seed=nb_simulations*seed + i, stop_when_terminal=True)
         simulation.simulate(trajectory_length)
