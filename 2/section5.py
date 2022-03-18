@@ -13,7 +13,7 @@ from section4 import plot_mu, plot_Q, bound_stop
 from python.policy import FittedQPolicy, ParameterQPolicy
 from python.neural_network import NN
 import math 
-from section3 import make_video
+import matplotlib
 
 def get_net():
     net = nn.Sequential(
@@ -34,11 +34,15 @@ def curve_plot(expected_FQI, expected_PQ, expected_online, trajectory_sizes):
     print(expected_PQ)
     print("PQ-Online")
     print(expected_online)
-    plt.plot(trajectory_sizes, expected_FQI, label="FQI")
-    plt.plot(trajectory_sizes, expected_PQ, label="PQ")
-    plt.plot(trajectory_sizes, expected_online,label="PQ-Online")
-    plt.legend()
+    fig1, ax1 = plt.subplots()
+    ax1.plot(trajectory_sizes, expected_FQI, label="FQI")
+    ax1.plot(trajectory_sizes, expected_PQ, label="PQ")
+    ax1.plot(trajectory_sizes, expected_online,label="PQ-Online")
+    ax1.legend()
     plt.title("Expected return of the algorithm with respect to the trajectory size")
+    plt.xticks(trajectory_sizes)
+    plt.xscale("log")
+    ax1.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     plt.ylabel("Expected return J")
     plt.xlabel("Trajectory size")
     plt.savefig("figures/comparison.png")
@@ -55,8 +59,8 @@ def get_trajectories(buffer_size, seed=42):
     n = 0
     terminal = []
     while len(random_trajectories) <=  buffer_size:
-        initial_state = State.random_initial_state(seed=n)
-        simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=seed + n, stop_when_terminal=True)
+        initial_state = State.random_initial_state(seed=seed + n*buffer_size)
+        simulation = Simulation(domain, random_policy, initial_state, remember_trajectory=True, seed=seed + n*buffer_size, stop_when_terminal=True)
         simulation.simulate(trajectory_length)
         terminal.append(np.array(simulation.get_trajectory(values=True))[:, 3][-1])
         random_trajectories.extend(np.array(simulation.get_trajectory(values=True)).squeeze())
@@ -82,17 +86,17 @@ def protocol_comparison(online=False):
     for trajectory_size in trajectory_sizes:
         trajectories = get_trajectories(trajectory_size, seed=trajectory_size)
 
-        #Q Fitted iteration
-        # mlp = lambda : NN(layers=2, neurons=5, output=1, epochs=5, batch_size=32, activation="relu")
-        # fqi = Fitted_Q(mlp, bound_stop, DISCOUNT_FACTOR)
+        # Q Fitted iteration
+        mlp = lambda : NN(layers=2, neurons=5, output=1, epochs=5, batch_size=32, activation="relu")
+        fqi = Fitted_Q(mlp, bound_stop, DISCOUNT_FACTOR)
 
-        # fqi.fit(trajectories)
-        # fqi_policy = FittedQPolicy(fqi)
-        # expected_reward = J(domain, fqi_policy, DISCOUNT_FACTOR, 50, N_j, seed=trajectory_size)
-        # print("J for FQI_{}: {}".format(trajectory_size, expected_reward))
-        # expected_FQI.append(expected_reward)
+        fqi.fit(trajectories)
+        fqi_policy = FittedQPolicy(fqi)
+        expected_reward = J(domain, fqi_policy, DISCOUNT_FACTOR, 50, N_j, seed=trajectory_size)
+        print("J for FQI_{}: {}".format(trajectory_size, expected_reward))
+        expected_FQI.append(expected_reward)
 
-        #Parametric QLearning
+        # Parametric QLearning
         dataset = StateActionDataset(trajectories)
         loader = data.DataLoader(
             dataset,
@@ -121,33 +125,35 @@ def protocol_comparison(online=False):
     curve_plot(expected_FQI, expected_PQ, expected_online, trajectory_sizes)
 
 if __name__ == '__main__':
-    # epsilon = 1e-3
-    # N = math.ceil(math.log((epsilon / B_r) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
-    
-    # # # Generate dataset
-    # trajectories = get_trajectories(80000, seed=42) # random trajectories
-    # dataset = StateActionDataset(trajectories)
-    # loader = data.DataLoader(
-    #     dataset,
-    #     batch_size=None,
-    #     sampler=data.BatchSampler(data.RandomSampler(dataset), 32, False)
-    # )
-    
-    # # Learn
-    # pql = ParametricQLearning(get_net())
-    # loss = pql.fit(loader, 100) 
 
-    # # Make plot
-    # plot_Q(pql, "PQL_5")
-    # plot_mu(pql, "PQL_5")
+    for i in range(10): # average across different seeds
+        epsilon = 1e-3
+        N = math.ceil(math.log((epsilon / B_r) * (1. - DISCOUNT_FACTOR), DISCOUNT_FACTOR))
+        
+        # Generate dataset
+        trajectories = get_trajectories(80000, seed=i) # random trajectories
+        dataset = StateActionDataset(trajectories)
+        loader = data.DataLoader(
+            dataset,
+            batch_size=None,
+            sampler=data.BatchSampler(data.RandomSampler(dataset), 32, False)
+        )
+        
+        # Learn
+        pql = ParametricQLearning(get_net())
+        pql.fit(loader, 100) 
 
-    # # Expected return
-    # policy = ParameterQPolicy(pql)
-    # domain = CarOnTheHillDomain(DISCOUNT_FACTOR, M, GRAVITY, TIME_STEP, INTEGRATION_TIME_STEP)
-    # j = J(domain, policy, DISCOUNT_FACTOR, 50, N, seed=42)
-    # print("Reward PQL: ", j)
+        # Make plot
+        plot_Q(pql, "PQL_5")
+        plot_mu(pql, "PQL_5")
 
-    # print("\n----Protocol----\n")
+        # Expected return
+        policy = ParameterQPolicy(pql)
+        domain = CarOnTheHillDomain(DISCOUNT_FACTOR, M, GRAVITY, TIME_STEP, INTEGRATION_TIME_STEP)
+        j = J(domain, policy, DISCOUNT_FACTOR, 50, N, seed=i)
+        print("\nReward PQL: ", j)
+
+    print("\n----Protocol----\n")
     
     # Protocol
     protocol_comparison()
