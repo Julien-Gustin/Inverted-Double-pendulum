@@ -42,8 +42,8 @@ class DDPG():
             #Bellman equation
             y = rewards + (1-done)*self.gamma*self.target_critic(x)
             #Input of the critic network
-            states = states.unsqueeze(1)
-            actions = states.unsqueeze(1)
+            states = states(1) 
+            actions = states.unsqueeze(1) #
             x = torch.cat((states, actions), 1)
 
         #compute and return the MSE loss 
@@ -93,10 +93,10 @@ class DDPG():
         with torch.no_grad():
             for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
                 target_param.data.mul_(self.tau)
-                target_param.add_(param.data*(1-self.tau))
+                target_param.data.add_(param.data*(1-self.tau))
             for param, target_param in zip(self.actor.parameters(), self.target_actor.parameters()):
                 target_param.data.mul_(self.tau)
-                target_param.add_(param.data*(1-self.tau))
+                target_param.data.add_(param.data*(1-self.tau))
 
     def apply(self):
         #Initialize the replay buffer 
