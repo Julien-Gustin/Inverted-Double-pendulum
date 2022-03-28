@@ -36,17 +36,13 @@ class ReplayBuffer():
             self.done = np.append(self.done, 0)
 
     def minibatch(self, size):
-        indexes = None 
-        if size > len(self.states):
-            indexes = np.array([i for i in range(len(self.states))])
-        else:
-            indexes = np.random.randint(0, len(self.states), size=size)
+        indexes = np.random.randint(0, len(self.states), size=size)
 
         batch_dic = {
-                    'states': torch.as_tensor(self.states[indexes]),
-                    'actions': torch.as_tensor(self.actions[indexes]),
-                    'rewards': torch.as_tensor(self.rewards[indexes]),
-                    'new_states': torch.as_tensor(self.new_states[indexes]),
-                    'done': torch.as_tensor(self.done[indexes])
+                    'states': torch.Tensor(self.states[indexes]),
+                    'actions': torch.Tensor(self.actions[indexes]).unsqueeze(1),
+                    'rewards': torch.Tensor(self.rewards[indexes]).unsqueeze(1),
+                    'new_states': torch.Tensor(self.new_states[indexes]),
+                    'done': torch.Tensor(self.done[indexes]).unsqueeze(1)
         }
         return batch_dic
