@@ -5,7 +5,7 @@ import gym
 import random
 
 class DDPG():
-    def __init__(self, env, critic, actor, gamma=0.99, tau=0.95, batch_size=100, replay_buffer_size=1000, episodes=50, steps=5000):
+    def __init__(self, env, critic, actor, gamma=0.99, tau=0.95, batch_size=128, replay_buffer_size=512, episodes=50, steps=20000):
         self.env = env 
         self.critic = critic 
         self.actor = actor
