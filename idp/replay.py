@@ -1,3 +1,5 @@
+from types import new_class
+from matplotlib.pyplot import axis
 import numpy as np
 import torch 
 
@@ -12,17 +14,25 @@ class ReplayBuffer():
 
     def store(self, sample):
         state, action, reward, new_state, done = sample
-        self.states = np.append(self.states, state)
+
+        self.states = self.states.tolist()
+        self.states.append(state)
+        self.states = np.array(self.states)
+
         self.actions = np.append(self.actions, action)
         self.rewards = np.append(self.rewards, reward)
-        self.new_states = np.append(self.new_states, new_state)
+
+        self.new_states = self.new_states.tolist()
+        self.new_states.append(new_state)
+        self.new_states = np.array(self.new_states)
+
         self.done = np.append(self.done, done)
 
-        if len(self.states == self.capacity+1):
-            self.states = np.delete(self.states, 0)
+        if len(self.states) == self.capacity+1:
+            self.states = np.delete(self.states, 0, axis=0)
             self.actions = np.delete(self.actions, 0)
             self.rewards = np.delete(self.rewards, 0)
-            self.new_states = np.delete(self.new_states, 0)
+            self.new_states = np.delete(self.new_states, 0, axis=0)
             self.done = np.append(self.done, 0)
 
     def minibatch(self, size):
@@ -31,6 +41,7 @@ class ReplayBuffer():
             indexes = np.array([i for i in range(len(self.states))])
         else:
             indexes = np.random.randint(0, len(self.states), size=size)
+
         batch_dic = {
                     'states': torch.as_tensor(self.states[indexes]),
                     'actions': torch.as_tensor(self.actions[indexes]),
