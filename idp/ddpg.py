@@ -44,11 +44,11 @@ class DDPG():
             self.target_actor.train()
             #Input of the target critic network
             x = torch.cat((new_states, actor_actions), 1)
-
-        #Bellman equation
-        y = rewards + (1-done)*self.gamma*self.target_critic(x)
-        #Input of the critic network
-        x = torch.cat((states, actions), 1)
+            #Bellman equation
+            y = rewards + (1-done)*self.gamma*self.target_critic(x)
+            #Input of the critic network
+            x = torch.cat((states, actions), 1)
+            
         #compute and return the MSE loss 
         return ((y-self.critic(x))**2).mean()
 

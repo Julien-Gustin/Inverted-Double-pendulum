@@ -33,7 +33,7 @@ class ReplayBuffer():
             self.actions = np.delete(self.actions, 0)
             self.rewards = np.delete(self.rewards, 0)
             self.new_states = np.delete(self.new_states, 0, axis=0)
-            self.done = np.append(self.done, 0)
+            self.done = np.delete(self.done, 0)
 
     def minibatch(self, size):
         indexes = np.random.randint(0, len(self.states), size=size)
