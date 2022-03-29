@@ -12,6 +12,9 @@ class ReplayBuffer():
         self.new_states = np.array(list())
         self.done = np.array(list())
 
+    def __len__(self):
+        return len(self.states)
+
     def store(self, sample):
         state, action, reward, new_state, done = sample
 

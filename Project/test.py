@@ -11,11 +11,14 @@ env.reset()
 while True:
     rng = numpy.random.random()
     if rng < 0.5:
-       state, rewards, done, _ = env.step([1])
+       state, rewards, done, _ = env.step([10])
        print(done)
 
+
+
     else:
-        env.step([-1])
+        env.step([-10])
 
-
+    import time
+    time.sleep(1)
 env.reset()
