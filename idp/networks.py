@@ -19,10 +19,10 @@ torch.backends.cudnn.deterministic = True
 class Critic(nn.Module):
     def __init__(self) -> None:
         super(Critic, self).__init__()
-        self.l1 = self.linear_batch_relu(9, 400)
-        self.l2 = self.linear_batch_relu(400, 299)
+        self.l1 = self.linear_batch_relu(9, 399)
+        self.l2 = self.linear_batch_relu(399+1, 300)
 
-        self.l3 = nn.Linear(299 + 1, 1)
+        self.l3 = nn.Linear(300, 1)
         torch.nn.init.uniform_(self.l3.weight, -3*1e-3, 3*1e-3)
 
     def linear_batch_relu(self, i, o):
@@ -34,8 +34,8 @@ class Critic(nn.Module):
         
     def forward(self, state, action):
         x = self.l1(state)
-        x = self.l2(x)
         x = torch.cat((x, action), dim=1)
+        x = self.l2(x)
         x = self.l3(x)
         return x
         
