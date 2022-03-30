@@ -6,11 +6,12 @@ import torch
 class ReplayBuffer():
     def __init__(self, capacity):
         self.capacity = capacity
-        self.states = np.array(list())
-        self.actions = np.array(list())
-        self.rewards = np.array(list())
-        self.new_states = np.array(list())
-        self.done = np.array(list())
+        self.index = 0
+        self.states = np.zeros((capacity, 9))
+        self.actions = np.zeros(capacity)
+        self.rewards = np.zeros(capacity)
+        self.new_states = np.zeros((capacity, 9))
+        self.done = np.zeros(capacity)
 
     def __len__(self):
         return len(self.states)
@@ -18,25 +19,13 @@ class ReplayBuffer():
     def store(self, sample):
         state, action, reward, new_state, done = sample
 
-        self.states = self.states.tolist()
-        self.states.append(state)
-        self.states = np.array(self.states)
+        self.states[self.index] = state
+        self.actions[self.index] = action
+        self.rewards[self.index] = reward
+        self.new_states[self.index] = new_state
+        self.done[self.index] = done 
 
-        self.actions = np.append(self.actions, action)
-        self.rewards = np.append(self.rewards, reward)
-
-        self.new_states = self.new_states.tolist()
-        self.new_states.append(new_state)
-        self.new_states = np.array(self.new_states)
-
-        self.done = np.append(self.done, done)
-
-        if len(self.states) == self.capacity+1:
-            self.states = np.delete(self.states, 0, axis=0)
-            self.actions = np.delete(self.actions, 0)
-            self.rewards = np.delete(self.rewards, 0)
-            self.new_states = np.delete(self.new_states, 0, axis=0)
-            self.done = np.delete(self.done, 0)
+        self.index = (self.index+1) % self.capacity
 
     def minibatch(self, size):
         indexes = np.random.randint(0, len(self.states), size=size)

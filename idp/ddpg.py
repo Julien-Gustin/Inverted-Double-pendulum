@@ -4,12 +4,12 @@ from copy import deepcopy
 import torch 
 import gym 
 import numpy as np
-
+import time
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
 class DDPG():
-    def __init__(self, env, critic, actor, gamma=0.95, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, noise=1):
+    def __init__(self, env, critic, actor, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e2), episodes=500, steps=1000, noise=1):
         self.env = env 
         self.critic = critic.to(device)
         self.actor = actor.to(device)
@@ -36,10 +36,12 @@ class DDPG():
         """
         Computes the loss of the critic network
         """
-        states, actions, rewards, new_states, done = batch['states'].to(device), batch['actions'].to(device), batch['rewards'].to(device), batch['new_states'].to(device), batch['done'].to(device)
         with torch.no_grad():
+            states, actions, rewards, new_states, done = batch['states'].to(device), batch['actions'].to(device), batch['rewards'].to(device), batch['new_states'].to(device), batch['done'].to(device)
             #Select current believe of which action maximises the cumulative reward
+            self.target_actor.eval()
             actor_actions = self.target_actor(new_states)
+            self.target_actor.train()
             #Bellman equation
             y = rewards + (1-done)*self.gamma*self.target_critic(new_states, actor_actions)
 
@@ -52,31 +54,37 @@ class DDPG():
         """
         states = batch['states'].to(device)
         actor_actions = self.actor(states)
+
+        self.critic.eval()
+        aloss = -self.critic(states, actor_actions).mean()
+        self.critic.train()
         
         #Compute and return the loss 
-        return -self.critic(states, actor_actions).mean()
+        return aloss
 
     def choose_action(self, state):
         """
         Chooses an action using the actor network and by applying some noise to explore 
         """
-        self.actor.eval()
-        t_state = torch.Tensor(state).unsqueeze(0).to(device)
-        action = self.actor(t_state).detach().to("cpu")
-        noise = self.noise * torch.randn(action.shape)
-        action += noise
-        self.actor.train()
+        with torch.no_grad():
+            self.actor.eval()
+            t_state = torch.Tensor(state).unsqueeze(0).to(device)
+            action = self.actor(t_state).detach().to("cpu")
+            noise = self.noise * torch.randn(action.shape)
+            action += noise
+            self.actor.train()
         return torch.clip(action, -1.0, 1.0).numpy()
 
     def compute_optimal_actions(self, states):
         """
         Choose an action using the actor network
         """
-        self.actor.eval()
-        states = np.array(states)
-        t_state = torch.Tensor(states).to(device)
-        action = torch.clip(self.actor(t_state), -1.0, 1.0).detach().to("cpu").numpy()
-        self.actor.train()
+        with torch.no_grad():
+            self.actor.eval()
+            states = np.array(states)
+            t_state = torch.Tensor(states).to(device)
+            action = torch.clip(self.actor(t_state), -1.0, 1.0).detach().to("cpu").numpy()
+            self.actor.train()
         if len(action) == 1:
             return action[0]
 
@@ -87,10 +95,13 @@ class DDPG():
         Performs one step of gradient descent for the critic network and the actor network
         """
         #Update critic network using gradient descent
+
+        start = time.process_time()
         closs = self.critic_loss(batch)
         self.critic_optimizer.zero_grad()
         closs.backward()
         self.critic_optimizer.step()
+        print(time.process_time() - start)
 
         # Don't waste computational effort
         for param in self.critic.parameters():
@@ -133,11 +144,11 @@ class DDPG():
 
         current_state = self.env.reset()
         # fill the buffer with random actions
-        while len(replay_buffer) < self.batch_size:
-            action = np.random.uniform(-1.0, 1.0, current_state.shape)
-            new_state, reward, done, _ = self.env.step(action)
-            replay_buffer.store((current_state, action, reward, new_state, done))
-            current_state = self.env.reset() if done else new_state
+        # while len(replay_buffer) < self.batch_size * 10:
+        #     action = np.random.uniform(-1.0, 1.0, current_state.shape)
+        #     new_state, reward, done, _ = self.env.step(action)
+        #     replay_buffer.store((current_state, action, reward, new_state, done))
+        #     current_state = self.env.reset() if done else new_state
 
         #Algorithm
         for i in range(self.episodes):
@@ -151,7 +162,8 @@ class DDPG():
             if i % 50 == 0:
                 torch.save(self.target_actor, "actor_{}".format(i))
                 torch.save(self.target_critic, "critic_{}".format(i))
-
+            
+            start = time.process_time()
             for _ in range(self.steps):
                 #make a step in the environment
                 action = self.choose_action(current_state)
@@ -168,7 +180,7 @@ class DDPG():
 
                 #Perform one step of gradient descend for the networks
                 closs, aloss = self.update_networks(batch)
-                
+
                 #Remember the losses 
                 critic_losses.append(closs)
                 actor_losses.append(aloss)
@@ -176,9 +188,11 @@ class DDPG():
                 #Update target networks
                 self.update_target_networks()
 
+
             avg_critic_loss = torch.mean(torch.Tensor(critic_losses))
             avg_actor_loss = torch.mean(torch.Tensor(actor_losses))
             j = J(self.env, self, self.gamma, 50, 1000)
+            print(time.process_time() - start)
             print("Episode {}: Critic: {} | Actor: {} | J: {}".format(i+1, avg_critic_loss, avg_actor_loss, j))
 
 

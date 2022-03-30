@@ -12,7 +12,7 @@ env = gym.make('InvertedDoublePendulumPyBulletEnv-v0')
 env.render() # call this before env.reset, if you want a window showing the environment
 env.reset()
 
-actions = get_discretize_action(13)
+actions = get_discretize_action(11)
 
 fqi = None
 for size in [10, 100, 1000, 5000, 10000, 50000, 100000, 200000, 500000]:
@@ -20,7 +20,8 @@ for size in [10, 100, 1000, 5000, 10000, 50000, 100000, 200000, 500000]:
     fqi = Fitted_Q_ERT(0.95, actions, seed=size)
     fqi.fit(samples)
 
-    print("{} samples: ".format(size), J(env, fqi, 0.95, 50, 1000))
+    m, s = J(env, fqi, 0.99, 50, 1000)
+    print("{} samples: | mean: {} | std: {}".format(size, m, s))
 
 # samples = generate_sample(env, 500000, actions, seed=42)
 # fqi = Fitted_Q_ERT(0.95, actions)

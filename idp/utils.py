@@ -44,4 +44,4 @@ def J(env, policy, discount_factor:float, nb_simulations: int, trajectory_length
 
         J_hat[i] = j
 
-    return J_hat.mean()
+    return J_hat.mean(), J_hat.std()
