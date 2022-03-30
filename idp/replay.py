@@ -13,8 +13,10 @@ class ReplayBuffer():
         self.new_states = np.zeros((capacity, 9))
         self.done = np.zeros(capacity)
 
+        self.size = 0
+
     def __len__(self):
-        return len(self.states)
+        return self.size
 
     def store(self, sample):
         state, action, reward, new_state, done = sample
@@ -27,8 +29,13 @@ class ReplayBuffer():
 
         self.index = (self.index+1) % self.capacity
 
+        if self.size != self.capacity:
+            self.size += 1
+
+
+
     def minibatch(self, size):
-        indexes = np.random.randint(0, len(self.states), size=size)
+        indexes = np.random.randint(0, self.size, size=size)
 
         batch_dic = {
                     'states': torch.Tensor(self.states[indexes]),

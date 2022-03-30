@@ -6,10 +6,14 @@ import gym
 import numpy as np
 import time
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+import matplotlib.pyplot as plt
+
 print(device)
 
+name = "batch_normal_0.99"
+
 class DDPG():
-    def __init__(self, env, critic, actor, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e2), episodes=500, steps=1000, noise=1):
+    def __init__(self, env, critic, actor, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, noise=1):
         self.env = env 
         self.critic = critic.to(device)
         self.actor = actor.to(device)
@@ -96,12 +100,10 @@ class DDPG():
         """
         #Update critic network using gradient descent
 
-        start = time.process_time()
         closs = self.critic_loss(batch)
         self.critic_optimizer.zero_grad()
         closs.backward()
         self.critic_optimizer.step()
-        print(time.process_time() - start)
 
         # Don't waste computational effort
         for param in self.critic.parameters():
@@ -141,14 +143,16 @@ class DDPG():
         self.target_actor.train()
         self.target_critic.train()
 
+        J_mean = []
+        J_std = []
 
         current_state = self.env.reset()
         # fill the buffer with random actions
-        # while len(replay_buffer) < self.batch_size * 10:
-        #     action = np.random.uniform(-1.0, 1.0, current_state.shape)
-        #     new_state, reward, done, _ = self.env.step(action)
-        #     replay_buffer.store((current_state, action, reward, new_state, done))
-        #     current_state = self.env.reset() if done else new_state
+        for i in range(self.batch_size * 100):
+            action = np.random.uniform(-1.0, 1.0)
+            new_state, reward, done, _ = self.env.step([action])
+            replay_buffer.store((current_state, action, reward, new_state, done))
+            current_state = self.env.reset() if done else new_state
 
         #Algorithm
         for i in range(self.episodes):
@@ -160,13 +164,14 @@ class DDPG():
             actor_losses = []
 
             if i % 50 == 0:
-                torch.save(self.target_actor, "actor_{}".format(i))
-                torch.save(self.target_critic, "critic_{}".format(i))
+                torch.save(self.actor.state_dict(), "models/actor_{}_{}".format(i, name))
+                torch.save(self.critic.state_dict(), "models/critic_{}_{}".format(i, name))
             
             start = time.process_time()
             for _ in range(self.steps):
                 #make a step in the environment
                 action = self.choose_action(current_state)
+                # print(action)
                 new_state, reward, done, _ = self.env.step(action)
 
                 #store the transition in the replay buffer
@@ -192,10 +197,23 @@ class DDPG():
             avg_critic_loss = torch.mean(torch.Tensor(critic_losses))
             avg_actor_loss = torch.mean(torch.Tensor(actor_losses))
             j = J(self.env, self, self.gamma, 50, 1000)
+            J_mean.append(j[0])
+            J_std.append(j[1])
             print(time.process_time() - start)
             print("Episode {}: Critic: {} | Actor: {} | J: {}".format(i+1, avg_critic_loss, avg_actor_loss, j))
 
 
+        J_mean = np.array(J_mean)
+        J_std = np.array(J_std)
+        plt.plot(J_mean, label="Expected return")
+        plt.ylabel("Expected return J")
+        plt.xlabel("Episode")
+        plt.legend()
+        plt.fill_between(range(self.episodes),J_mean-J_std,J_mean+J_std,alpha=.1)
+        plt.savefig("figures/J_{}".format(name))
+
+        J_mean.tofile("data/J_mean_{}".format(name))
+        J_std.tofile("data/J_std_{}".format(name))
 
 
 
