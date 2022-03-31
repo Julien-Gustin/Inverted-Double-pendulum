@@ -26,7 +26,7 @@ class Critic(nn.Module):
         else:
             self.l1 = nn.Sequential(self.linear_relu(state_space, 400-action_space))
 
-        self.l2 = self.linear_relu(400, 300-action_space)
+        self.l2 = self.linear_relu(400, 300)
         self.l3 = nn.Linear(300, 1)
 
         torch.nn.init.uniform_(self.l3.weight, -3*1e-3, 3*1e-3)
@@ -47,8 +47,8 @@ class Critic(nn.Module):
         
     def forward(self, state, action):
         x = self.l1(state)
-        x = self.l2(x)
         x = torch.cat((x, action), dim=1)
+        x = self.l2(x)
         x = self.l3(x)
         return x
 

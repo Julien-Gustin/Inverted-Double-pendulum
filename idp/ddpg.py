@@ -7,13 +7,12 @@ import numpy as np
 import time
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import matplotlib.pyplot as plt
+from noise import OU
 
 print(device)
 
-name = "batch_normal_0.99"
-
 class DDPG():
-    def __init__(self, env, critic, actor, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, noise=1):
+    def __init__(self, env, critic, actor, exploration, file_extension, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, noise=1, nb_simulation=50):
         self.env = env 
         self.critic = critic.to(device)
         self.actor = actor.to(device)
@@ -26,6 +25,9 @@ class DDPG():
         self.target_critic = deepcopy(critic).to(device)
         self.target_actor = deepcopy(actor).to(device)
         self.noise = noise
+        self.exploration = exploration
+        self.file_extension = file_extension
+        self.nb_simulation = nb_simulation
 
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=1e-3, weight_decay=1e-2)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
@@ -73,9 +75,9 @@ class DDPG():
         with torch.no_grad():
             self.actor.eval()
             t_state = torch.Tensor(state).unsqueeze(0).to(device)
-            action = self.actor(t_state).detach().to("cpu")
-            noise = self.noise * torch.randn(action.shape)
-            action += noise
+            action = self.actor(t_state).detach().to("cpu") + self.exploration()
+            # noise = self.noise * torch.randn(action.shape)
+            # action += noise
             self.actor.train()
         return torch.clip(action, -1.0, 1.0).numpy()
 
@@ -148,14 +150,14 @@ class DDPG():
 
         current_state = self.env.reset()
         # fill the buffer with random actions
-        for i in range(self.batch_size * 100):
+        for i in range(1000):
             action = np.random.uniform(-1.0, 1.0)
             new_state, reward, done, _ = self.env.step([action])
             replay_buffer.store((current_state, action, reward, new_state, done))
             current_state = self.env.reset() if done else new_state
 
         #Algorithm
-        for i in range(self.episodes):
+        for i in range(1, self.episodes+1):
             #Initialize a new starting state for the episode
             current_state = self.env.reset()
             
@@ -163,15 +165,17 @@ class DDPG():
             critic_losses = []
             actor_losses = []
 
-            if i % 50 == 0:
-                torch.save(self.actor.state_dict(), "models/actor_{}_{}".format(i, name))
-                torch.save(self.critic.state_dict(), "models/critic_{}_{}".format(i, name))
+            if (i) % 50 == 0:
+                torch.save(self.actor.state_dict(), "models/actor_{}_{}".format(i, self.file_extension))
+                torch.save(self.critic.state_dict(), "models/critic_{}_{}".format(i, self.file_extension))
             
             start = time.process_time()
+
+            self.env.seed(self.nb_simulation + i) # not interfer with the computation of J
+
             for _ in range(self.steps):
                 #make a step in the environment
                 action = self.choose_action(current_state)
-                # print(action)
                 new_state, reward, done, _ = self.env.step(action)
 
                 #store the transition in the replay buffer
@@ -196,7 +200,7 @@ class DDPG():
 
             avg_critic_loss = torch.mean(torch.Tensor(critic_losses))
             avg_actor_loss = torch.mean(torch.Tensor(actor_losses))
-            j = J(self.env, self, self.gamma, 50, 1000)
+            j = J(self.env, self, self.gamma, self.nb_simulation, 1000)
             J_mean.append(j[0])
             J_std.append(j[1])
             print(time.process_time() - start)
@@ -210,10 +214,10 @@ class DDPG():
         plt.xlabel("Episode")
         plt.legend()
         plt.fill_between(range(self.episodes),J_mean-J_std,J_mean+J_std,alpha=.1)
-        plt.savefig("figures/J_{}".format(name))
+        plt.savefig("figures/J_{}".format(self.file_extension))
 
-        J_mean.tofile("data/J_mean_{}".format(name))
-        J_std.tofile("data/J_std_{}".format(name))
+        J_mean.tofile("data/J_mean_{}".format(self.file_extension))
+        J_std.tofile("data/J_std_{}".format(self.file_extension))
 
 
 

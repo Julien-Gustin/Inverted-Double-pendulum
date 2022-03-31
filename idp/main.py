@@ -1,5 +1,6 @@
 from ast import parse
-import gym  # open ai gym
+import gym
+from noise import OU  # open ai gym
 import pybulletgym  # register PyBullet enviroments with open ai gym
 import numpy as np
 import time
@@ -10,40 +11,19 @@ from fqi import Fitted_Q_ERT
 from utils import *
 from networks import Actor, Critic
 from ddpg import DDPG
-
-# actions = get_discretize_action(11)
-
-# fqi = None
-# for size in [10, 100, 1000, 5000, 10000, 50000, 100000, 200000, 500000]:
-#     samples = generate_sample(env, size, actions, seed=size)
-#     fqi = Fitted_Q_ERT(0.95, actions, seed=size)
-#     fqi.fit(samples)
-
-#     m, s = J(env, fqi, 0.99, 50, 1000)
-#     print("{} samples: | mean: {} | std: {}".format(size, m, s))
-
-# # samples = generate_sample(env, 500000, actions, seed=42)
-# # fqi = Fitted_Q_ERT(0.95, actions)
-# # fqi.fit(samples)
-# # print("J:", J(env, fqi, 0.95, 50, 1000))
-# state = env.reset()
-# while True:
-#     action = fqi.compute_optimal_actions([state])
-#     state, _, done, _ = env.step([action])
-#     time.sleep(1e-2)
-
-#     if done:
-#        state = env.reset()
+import torch
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--ddpg', action="store_true")
     parser.add_argument('--fqi', action="store_true")
     parser.add_argument('--batch', action="store_true")
-    parser.add_argument('--render', action="store_true")
+    parser.add_argument('--render', action="store")
+    parser.add_argument('--gamma', action='store')
+    parser.add_argument('--samples', action='store')
     args = parser.parse_args()
 
-    if args.ddpg == args.fqi:
+    if args.ddpg == args.fqi or args.gamma is None or (not args.ddpg and args.render is not None) or (args.fqi and not args.samples):
         print("Error: Should use either ddpg or fqi using parameters\n\t`--ddpg` to use ddpg\n\t`--fqi` to use fitted Q iteration")
         exit()
 
@@ -51,36 +31,46 @@ def parse_args():
 
 
 if __name__ == '__main__':
-
     # parse input
     args = parse_args()
+    
+    file_extension = "{}_{}_{}".format(args.batch, "ou", args.gamma)
 
-    print(args.ddpg)
-
-
+    # launch environment
     gym.logger.set_level(40)
     env = gym.make('InvertedDoublePendulumPyBulletEnv-v0')
-
-    # if render
-
-    # env.render() # call this before env.reset, if you want a window showing the environment
-    # env.reset()
+    env.seed(42)
 
     if args.fqi:
-        pass
+        actions = get_discretize_action(11)
+        samples = generate_sample(env, int(args.samples), actions, seed=args.samples)
+        fqi = Fitted_Q_ERT(float(args.gamma), actions, seed=args.samples)
+        fqi.fit(samples)
 
-    # fqi
-
-    # ddpg
+        mean, std = J(env, fqi, 0.99, 50, 1000)
+        print("{} samples: | mean: {} | std: {}".format(args.samples, mean, std))
 
     if args.ddpg:
-        pass
+        actor = Actor(batch=bool(args.batch), state_space=9)
+        critic = Critic(batch=bool(args.batch), action_space=1, state_space=9)
 
-    # ddpg = True
+        # Render a loaded model
+        if args.render is not None:
+            env.render() 
+            state = env.reset()
+            actor.load_state_dict(torch.load(args.render))
+            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=float(args.gamma))
 
-    # if ddpg:
-    #     actor = Actor(batch=True, state_space=9)
-    #     critic = Critic(batch=True, action_space=1, state_space=9)
+            while True:
+                action = ddpg.compute_optimal_actions([state])
+                state, _, done, _ = env.step([action])
+                time.sleep(1e-2)
 
-    #     ddpg = DDPG(env, critic, actor)
-    #     ddpg.apply()
+                if done:
+                    state = env.reset()
+
+        # Train ddpg
+        else:
+            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=float(args.gamma))
+            ddpg.apply()
+
