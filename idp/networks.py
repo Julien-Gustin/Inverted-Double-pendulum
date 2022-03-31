@@ -7,8 +7,7 @@ import time
 import numpy as np
 import random
 # Seed
-SEED = 3
-torch.manual_seed(SEED)
+SEED = 42
 torch.cuda.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
 np.random.seed(SEED)
@@ -17,12 +16,19 @@ torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 
 class Critic(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, batch:bool, action_space:int, state_space:int) -> None:
         super(Critic, self).__init__()
-        self.l1 = nn.Sequential(nn.BatchNorm1d(9), self.linear_batch_relu(9, 399))
-        self.l2 = self.linear_relu(399+1, 300)
+        torch.manual_seed(SEED)
 
+        if batch:
+            self.l1 = nn.Sequential(nn.BatchNorm1d(state_space), self.linear_batch_relu(state_space, 400-action_space))
+
+        else:
+            self.l1 = nn.Sequential(self.linear_relu(state_space, 400-action_space))
+
+        self.l2 = self.linear_relu(400, 300-action_space)
         self.l3 = nn.Linear(300, 1)
+
         torch.nn.init.uniform_(self.l3.weight, -3*1e-3, 3*1e-3)
         torch.nn.init.uniform_(self.l3.bias, -3*1e-3, 3*1e-3)
 
@@ -41,32 +47,41 @@ class Critic(nn.Module):
         
     def forward(self, state, action):
         x = self.l1(state)
-        x = torch.cat((x, action), dim=1)
         x = self.l2(x)
+        x = torch.cat((x, action), dim=1)
         x = self.l3(x)
         return x
-        
 
-critic = Critic()
 
-torch.manual_seed(SEED)
 
 class Actor(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, batch:bool, state_space:int) -> None:
         super(Actor, self).__init__()
-        self.l1 = nn.Sequential(nn.BatchNorm1d(9), self.linear_batch_relu(9, 400))
-        self.l2 = self.linear_batch_relu(400, 300)
+        torch.manual_seed(SEED)
+
+        if batch:
+            self.l1 = nn.Sequential(nn.BatchNorm1d(state_space), self.linear_batch_relu(state_space, 400))
+            self.l2 = self.linear_batch_relu(400, 300)
+
+        else:
+            self.l1 = nn.Sequential(self.linear_relu(state_space, 400))
+            self.l2 = self.linear_relu(400, 300)
 
         last_layer = nn.Linear(300, 1)
         torch.nn.init.uniform_(last_layer.weight, -3*1e-3, 3*1e-3)
         torch.nn.init.uniform_(last_layer.bias, -3*1e-3, 3*1e-3)
         self.l3 = nn.Sequential(last_layer, nn.Tanh()) 
-        
 
     def linear_batch_relu(self, i, o):
         return nn.Sequential(
             nn.Linear(i, o),
             nn.BatchNorm1d(o),
+            nn.ReLU(),
+        )
+
+    def linear_relu(self, i, o):
+        return nn.Sequential(
+            nn.Linear(i, o),
             nn.ReLU(),
         )
         
@@ -76,79 +91,17 @@ class Actor(nn.Module):
         x = self.l3(x)
         return x
 
-actor = Actor()
-
-# class Critic(nn.Module):
-#     def __init__(self) -> None:
-#         super(Critic, self).__init__()
-#         self.l1 = nn.Sequential(self.linear_batch_relu(9, 399))
-#         self.l2 = self.linear_relu(399+1, 300)
-
-#         self.l3 = nn.Linear(300, 1)
-#         torch.nn.init.uniform_(self.l3.weight, -3*1e-3, 3*1e-3)
-#         torch.nn.init.uniform_(self.l3.bias, -3*1e-3, 3*1e-3)
-
-#     def linear_batch_relu(self, i, o):
-#         return nn.Sequential(
-#             nn.Linear(i, o),
-#             # nn.BatchNorm1d(o),
-#             nn.ReLU(),
-#         )
-
-#     def linear_relu(self, i, o):
-#         return nn.Sequential(
-#             nn.Linear(i, o),
-#             nn.ReLU(),
-#         )
-        
-#     def forward(self, state, action):
-#         x = self.l1(state)
-#         x = torch.cat((x, action), dim=1)
-#         x = self.l2(x)
-#         x = self.l3(x)
-#         return x
-        
-
+# actor = Actor()
 # critic = Critic()
 
-# torch.manual_seed(SEED)
-
-# class Actor(nn.Module):
-#     def __init__(self) -> None:
-#         super(Actor, self).__init__()
-#         self.l1 = nn.Sequential(self.linear_batch_relu(9, 400))
-#         self.l2 = self.linear_batch_relu(400, 300)
-
-#         last_layer = nn.Linear(300, 1)
-#         torch.nn.init.uniform_(last_layer.weight, -3*1e-3, 3*1e-3)
-#         torch.nn.init.uniform_(last_layer.bias, -3*1e-3, 3*1e-3)
-#         self.l3 = nn.Sequential(last_layer, nn.Tanh()) 
-        
-
-#     def linear_batch_relu(self, i, o):
-#         return nn.Sequential(
-#             nn.Linear(i, o),
-#             # nn.BatchNorm1d(o),
-#             nn.ReLU(),
-#         )
-        
-#     def forward(self, state):
-#         x = self.l1(state)
-#         x = self.l2(x)
-#         x = self.l3(x)
-#         return x
-
-# actor = Actor()
-
-
-gym.logger.set_level(40)
-env = gym.make('InvertedDoublePendulumPyBulletEnv-v0')
-env.seed(42)
+# gym.logger.set_level(40)
+# env = gym.make('InvertedDoublePendulumPyBulletEnv-v0')
+# env.seed(42)
 # env.render() # call this before env.reset, if you want a window showing the environment
 # env.reset()
 
-ddpg = DDPG(env, critic, actor)
-ddpg.apply()
+# ddpg = DDPG(env, critic, actor)
+# ddpg.apply()
 
 # torch.save(ddpg.target_actor, "actor")
 # torch.save(ddpg.target_critic, "critic")

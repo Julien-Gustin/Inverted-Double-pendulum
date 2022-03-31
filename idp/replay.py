@@ -3,6 +3,8 @@ from matplotlib.pyplot import axis
 import numpy as np
 import torch 
 
+np.random.seed(42)
+
 class ReplayBuffer():
     def __init__(self, capacity):
         self.capacity = capacity
