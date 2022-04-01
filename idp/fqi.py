@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.ensemble import ExtraTreesRegressor
 import math
 
-B_r = 10
+B_r = 10 # Max rewards for double pendulum environment
 
 class Fitted_Q_ERT():
     def __init__(self, discount_factor:float, actions:list, seed=42) -> None:

@@ -58,7 +58,7 @@ if __name__ == '__main__':
         if args.render is not None:
             env.render() 
             state = env.reset()
-            actor.load_state_dict(torch.load(args.render))
+            actor.load_state_dict(torch.load(args.render, map_location="cpu"))
             ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=float(args.gamma))
 
             while True:

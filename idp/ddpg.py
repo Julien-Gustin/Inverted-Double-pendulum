@@ -164,10 +164,6 @@ class DDPG():
             #Keep track of losses
             critic_losses = []
             actor_losses = []
-
-            if (i) % 50 == 0:
-                torch.save(self.actor.state_dict(), "models/actor_{}_{}".format(i, self.file_extension))
-                torch.save(self.critic.state_dict(), "models/critic_{}_{}".format(i, self.file_extension))
             
             start = time.process_time()
 
@@ -197,7 +193,6 @@ class DDPG():
                 #Update target networks
                 self.update_target_networks()
 
-
             avg_critic_loss = torch.mean(torch.Tensor(critic_losses))
             avg_actor_loss = torch.mean(torch.Tensor(actor_losses))
             j = J(self.env, self, self.gamma, self.nb_simulation, 1000)
@@ -206,6 +201,8 @@ class DDPG():
             print(time.process_time() - start)
             print("Episode {}: Critic: {} | Actor: {} | J: {}".format(i+1, avg_critic_loss, avg_actor_loss, j))
 
+        torch.save(self.actor.state_dict(), "models/actor_{}_{}".format(self.episodes, self.file_extension))
+        torch.save(self.critic.state_dict(), "models/critic_{}_{}".format(self.episodes, self.file_extension))
 
         J_mean = np.array(J_mean)
         J_std = np.array(J_std)
@@ -214,7 +211,7 @@ class DDPG():
         plt.xlabel("Episode")
         plt.legend()
         plt.fill_between(range(self.episodes),J_mean-J_std,J_mean+J_std,alpha=.1)
-        plt.savefig("figures/J_{}".format(self.file_extension))
+        plt.savefig("figures/J_{}.png".format(self.file_extension))
 
         J_mean.tofile("data/J_mean_{}".format(self.file_extension))
         J_std.tofile("data/J_std_{}".format(self.file_extension))

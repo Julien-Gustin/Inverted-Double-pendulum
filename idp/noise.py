@@ -11,3 +11,10 @@ class OU():
         #Formula of an OU noise 
         self.x = self.theta*(self.mu-self.x) + self.sigma*np.random.randn(1)
         return self.x 
+
+class Gaussian():
+    def __init__(self, sigma):
+        self.sigma = sigma 
+    
+    def __call__(self):
+        return self.sigma*np.random.randn()
