@@ -1,5 +1,6 @@
 from ast import parse
 import gym
+from dql import DQL
 from noise import OU  # open ai gym
 import pybulletgym  # register PyBullet enviroments with open ai gym
 import numpy as np
@@ -9,7 +10,7 @@ import argparse
 from utils import generate_sample
 from fqi import Fitted_Q_ERT
 from utils import *
-from networks import Actor, Critic
+from networks import Actor, Critic, Critic_DQL
 from ddpg import DDPG
 import torch
 
@@ -17,15 +18,16 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--ddpg', action="store_true")
     parser.add_argument('--fqi', action="store_true")
+    parser.add_argument('--dql', action="store_true")
     parser.add_argument('--batch', action="store_true")
     parser.add_argument('--render', action="store")
     parser.add_argument('--gamma', action='store')
     parser.add_argument('--samples', action='store')
     args = parser.parse_args()
 
-    if args.ddpg == args.fqi or args.gamma is None or (not args.ddpg and args.render is not None) or (args.fqi and not args.samples):
-        print("Error: Should use either ddpg or fqi using parameters\n\t`--ddpg` to use ddpg\n\t`--fqi` to use fitted Q iteration")
-        exit()
+    # if args.ddpg == args.fqi == args.dql or args.gamma is None or (not args.ddpg and args.render is not None) or (args.fqi and not args.samples):
+    #     print("Error: Should use either ddpg or fqi using parameters\n\t`--ddpg` to use ddpg\n\t`--fqi` to use fitted Q iteration")
+    #     exit()
 
     return args
 
@@ -73,4 +75,10 @@ if __name__ == '__main__':
         else:
             ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=float(args.gamma))
             ddpg.apply()
+
+    if args.dql:
+        actions = get_discretize_action(11)
+        critic = Critic_DQL(bool(args.batch), len(actions), state_space=9)
+        dql = DQL(env, critic, file_extension, actions=actions, gamma=float(args.gamma))
+        dql.apply()
 

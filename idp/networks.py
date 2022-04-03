@@ -52,6 +52,42 @@ class Critic(nn.Module):
         x = self.l3(x)
         return x
 
+class Critic_DQL(nn.Module):
+    def __init__(self, batch:bool, nb_actions:int, state_space:int) -> None:
+        super(Critic_DQL, self).__init__()
+        torch.manual_seed(SEED)
+
+        if batch:
+            self.l1 = nn.Sequential(nn.BatchNorm1d(state_space), self.linear_batch_relu(state_space, 400))
+
+        else:
+            self.l1 = nn.Sequential(self.linear_relu(state_space, 400))
+
+        self.l2 = self.linear_relu(400, 300)
+        self.l3 = nn.Linear(300, nb_actions)
+
+        torch.nn.init.uniform_(self.l3.weight, -3*1e-3, 3*1e-3)
+        torch.nn.init.uniform_(self.l3.bias, -3*1e-3, 3*1e-3)
+
+    def linear_batch_relu(self, i, o):
+        return nn.Sequential(
+            nn.Linear(i, o),
+            nn.BatchNorm1d(o),
+            nn.ReLU(),
+        )
+
+    def linear_relu(self, i, o):
+        return nn.Sequential(
+            nn.Linear(i, o),
+            nn.ReLU(),
+        )
+        
+    def forward(self, state):
+        x = self.l1(state)
+        x = self.l2(x)
+        x = self.l3(x)
+        return x
+
 
 
 class Actor(nn.Module):

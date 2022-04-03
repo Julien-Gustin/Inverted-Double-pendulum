@@ -37,7 +37,7 @@ def J(env, policy, discount_factor:float, nb_simulations: int, trajectory_length
         n = 0
 
         while not done and n < trajectory_length:
-            action = policy.compute_optimal_actions([state])
+            action = policy.compute_optimal_actions(state)
             state, reward, done, _ = env.step([action])
             j += (discount_factor ** n) * reward
             n += 1   
