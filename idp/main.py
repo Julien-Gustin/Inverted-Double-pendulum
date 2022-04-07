@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # Deep Q-Learning
     if args.dql:
-        critic = Critic_DQL(bool(args.batchnorm), len(actions), state_space=9, seed=args.seed)
+        critic = Critic_DQL(args.batchnorm, len(actions), state_space=9, seed=args.seed)
 
         # Render a loaded model    
         if args.render is not None:

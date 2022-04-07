@@ -12,7 +12,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
 class DQL():
-    def __init__(self, env, critic, file_extension, actions, gamma=0.95, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, nb_simulation=50):
+    def __init__(self, env, critic, file_extension, actions, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, nb_simulation=50):
         self.env = env
         self.critic = critic.to(device)
         self.actions = actions
@@ -28,7 +28,7 @@ class DQL():
         self.nb_simulation = nb_simulation
 
         # update epsiln
-        self.end = 10000
+        self.end = episodes*steps*0.2
         self.current = 0
 
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=1e-3)
@@ -54,7 +54,7 @@ class DQL():
 
     def update_epsilon(self):
         """
-        Epsilon annealed linearly from 1.0 to 0.1 over 10000 frames
+        Epsilon annealed linearly from 1.0 to 0.1 over 100000 frames
         """
         self.epsilon = max((self.end - self.current)/self.end, 0.1)
         self.current += 1
