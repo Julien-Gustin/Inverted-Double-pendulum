@@ -1,84 +1,87 @@
-from ast import parse
 import gym
-from dql import DQL
-from noise import OU  # open ai gym
 import pybulletgym  # register PyBullet enviroments with open ai gym
-import numpy as np
 import time
-import argparse
 
-from utils import generate_sample
-from fqi import Fitted_Q_ERT
-from utils import *
-from networks import Actor, Critic, Critic_DQL
-from ddpg import DDPG
 import torch
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--ddpg', action="store_true")
-    parser.add_argument('--fqi', action="store_true")
-    parser.add_argument('--dql', action="store_true")
-    parser.add_argument('--batch', action="store_true")
-    parser.add_argument('--render', action="store")
-    parser.add_argument('--gamma', action='store')
-    parser.add_argument('--samples', action='store')
-    args = parser.parse_args()
+from models.dql import DQL
+from utils.noise import OU 
+from utils.expected_return import J
+from utils.utils import generate_sample, parse_args
+from models.fqi import Fitted_Q_ERT
+from utils.utils import *
+from networks import Actor_DDPG, Critic_DDPG, Critic_DQL
+from models.ddpg import DDPG
 
-    # if args.ddpg == args.fqi == args.dql or args.gamma is None or (not args.ddpg and args.render is not None) or (args.fqi and not args.samples):
-    #     print("Error: Should use either ddpg or fqi using parameters\n\t`--ddpg` to use ddpg\n\t`--fqi` to use fitted Q iteration")
-    #     exit()
+def render(env, model):
+    env.render() 
+    state = env.reset()
 
-    return args
+    while True:
+        action = model.compute_optimal_actions([state])
+        state, _, done, _ = env.step([action])
+        time.sleep(1e-2)
 
+        if done:
+            state = env.reset()
 
 if __name__ == '__main__':
     # parse input
     args = parse_args()
-    
-    file_extension = "{}_{}_{}".format(args.batch, "ou", args.gamma)
+    if args.actions is not None:
+        n_actions = args.actions
+        actions = get_discretize_action(n_actions)
+        file_extension = "{}_{}_{}".format(args.batchnorm, args.actions, args.gamma)
+
+    else:
+        file_extension = "{}_{}_{}".format(args.batchnorm, args.gamma)
 
     # launch environment
     gym.logger.set_level(40)
     env = gym.make('InvertedDoublePendulumPyBulletEnv-v0')
     env.seed(42)
 
+    # Fitted Q-Iteration
     if args.fqi:
-        actions = get_discretize_action(11)
-        samples = generate_sample(env, int(args.samples), actions, seed=args.samples)
-        fqi = Fitted_Q_ERT(float(args.gamma), actions, seed=args.samples)
+        samples = generate_sample(env, args.samples, seed=args.samples)
+        fqi = Fitted_Q_ERT(args.gamma, actions, seed=args.seed)
         fqi.fit(samples)
 
-        mean, std = J(env, fqi, 0.99, 50, 1000)
+        mean, std = J(env, fqi, args.gamma, 50, 1000)
+
         print("{} samples: | mean: {} | std: {}".format(args.samples, mean, std))
 
+    
+    # Deep Deterministic Policy Gradient
     if args.ddpg:
-        actor = Actor(batch=bool(args.batch), state_space=9)
-        critic = Critic(batch=bool(args.batch), action_space=1, state_space=9)
+        actor = Actor_DDPG(batch=args.batchnorm, state_space=9, seed=args.seed)
+        critic = Critic_DDPG(batch=args.batchnorm, action_space=1, state_space=9, seed=args.seed)
 
         # Render a loaded model
         if args.render is not None:
-            env.render() 
-            state = env.reset()
             actor.load_state_dict(torch.load(args.render, map_location="cpu"))
-            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=float(args.gamma))
+            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=args.gamma)
 
-            while True:
-                action = ddpg.compute_optimal_actions([state])
-                state, _, done, _ = env.step([action])
-                time.sleep(1e-2)
-
-                if done:
-                    state = env.reset()
+            render(env, ddpg)
 
         # Train ddpg
         else:
-            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=float(args.gamma))
+            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=args.gamma)
             ddpg.apply()
 
+    # Deep Q-Learning
     if args.dql:
-        actions = get_discretize_action(11)
-        critic = Critic_DQL(bool(args.batch), len(actions), state_space=9)
-        dql = DQL(env, critic, file_extension, actions=actions, gamma=float(args.gamma))
-        dql.apply()
+        critic = Critic_DQL(bool(args.batchnorm), len(actions), state_space=9, seed=args.seed)
+
+        # Render a loaded model    
+        if args.render is not None:
+            critic.load_state_dict(torch.load(args.render, map_location="cpu"))
+            dql = DQL(env, critic, file_extension, actions=actions, gamma=args.gamma)
+
+            render(env, dql)
+
+        # Train dql
+        else:
+            dql = DQL(env, critic, file_extension, actions=actions, gamma=args.gamma)
+            dql.apply()
 

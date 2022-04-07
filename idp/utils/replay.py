@@ -1,12 +1,11 @@
-from types import new_class
-from matplotlib.pyplot import axis
 import numpy as np
 import torch 
 
 np.random.seed(42)
 
 class ReplayBuffer():
-    def __init__(self, capacity):
+    """ Cyclic replay buffer of a given capactity """
+    def __init__(self, capacity:int):
         self.capacity = capacity
         self.index = 0
         self.states = np.zeros((capacity, 9))
@@ -20,7 +19,8 @@ class ReplayBuffer():
     def __len__(self):
         return self.size
 
-    def store(self, sample):
+    def store(self, sample:list):
+        """ store a new sample to the replay buffer"""
         state, action, reward, new_state, done = sample
 
         self.states[self.index] = state
@@ -34,9 +34,8 @@ class ReplayBuffer():
         if self.size != self.capacity:
             self.size += 1
 
-
-
-    def minibatch(self, size):
+    def minibatch(self, size:int):
+        """ Return minibatch of size `size` """
         indexes = np.random.randint(0, self.size, size=size)
 
         batch_dic = {

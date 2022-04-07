@@ -19,7 +19,7 @@ def J_th(rewards, discount_factor):
     return rewards[t] * discount_factor**t
 
 
-def J(domain: CarOnTheHillDomain, policy: Policy, discount_factor:float, nb_simulations: int, trajectory_length:int, seed=0, save=False):
+def J(domain: CarOnTheHillDomain, policy: Policy, discount_factor:float, nb_simulations: int, trajectory_length:int, seed=0):
     """ Estimates the expected return of a policy for the car on the hill problem """
     J_hat = np.zeros((nb_simulations))
     J_n = np.zeros((nb_simulations, trajectory_length))
@@ -33,14 +33,6 @@ def J(domain: CarOnTheHillDomain, policy: Policy, discount_factor:float, nb_simu
         trajectories = np.array(simulation.get_trajectory())
 
         rewards = trajectories[:, 2]
-
-        if save: # Save J for each n \in [1, trajectory length]
-            for n in range(0, trajectory_length):
-                J_n[i][n] = J_th(rewards[:n], discount_factor)
-
         J_hat[i] = J_th(rewards, discount_factor)
-
-    if save:
-        return J_n.mean(axis=0)
 
     return J_hat.mean()

@@ -1,11 +1,8 @@
 import torch.nn as nn 
 import torch 
-import gym
-import pybulletgym
-from ddpg import DDPG 
-import time 
 import numpy as np
 import random
+
 # Seed
 SEED = 42
 torch.cuda.manual_seed(SEED)
@@ -15,10 +12,10 @@ random.seed(SEED)
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 
-class Critic(nn.Module):
-    def __init__(self, batch:bool, action_space:int, state_space:int) -> None:
-        super(Critic, self).__init__()
-        torch.manual_seed(SEED)
+class Critic_DDPG(nn.Module):
+    def __init__(self, batch:bool, action_space:int, state_space:int, seed:int=42) -> None:
+        super(Critic_DDPG, self).__init__()
+        torch.manual_seed(seed)
 
         if batch:
             self.l1 = nn.Sequential(nn.BatchNorm1d(state_space), self.linear_batch_relu(state_space, 400-action_space))
@@ -53,9 +50,9 @@ class Critic(nn.Module):
         return x
 
 class Critic_DQL(nn.Module):
-    def __init__(self, batch:bool, nb_actions:int, state_space:int) -> None:
+    def __init__(self, batch:bool, nb_actions:int, state_space:int, seed:int=42) -> None:
         super(Critic_DQL, self).__init__()
-        torch.manual_seed(SEED)
+        torch.manual_seed(seed)
 
         if batch:
             self.l1 = nn.Sequential(nn.BatchNorm1d(state_space), self.linear_batch_relu(state_space, 400))
@@ -88,12 +85,10 @@ class Critic_DQL(nn.Module):
         x = self.l3(x)
         return x
 
-
-
-class Actor(nn.Module):
-    def __init__(self, batch:bool, state_space:int) -> None:
-        super(Actor, self).__init__()
-        torch.manual_seed(SEED)
+class Actor_DDPG(nn.Module):
+    def __init__(self, batch:bool, state_space:int, seed:int=42) -> None:
+        super(Actor_DDPG, self).__init__()
+        torch.manual_seed(seed)
 
         if batch:
             self.l1 = nn.Sequential(nn.BatchNorm1d(state_space), self.linear_batch_relu(state_space, 400))
