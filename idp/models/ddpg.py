@@ -1,5 +1,5 @@
-from utils.expected_return import J
-from utils.replay import ReplayBuffer
+from models.utils.expected_return import J
+from models.utils.replay import ReplayBuffer
 from copy import deepcopy
 
 import torch 

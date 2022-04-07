@@ -1,5 +1,5 @@
-from utils.expected_return import J
-from utils.replay import ReplayBuffer
+from models.utils.expected_return import J
+from models.utils.replay import ReplayBuffer
 from copy import deepcopy
 
 import torch 
@@ -47,9 +47,7 @@ class DQL():
             target_Q = self.target_critic(new_states).max(axis=1)[0].unsqueeze(1)
             y = torch.where(done == True, rewards, self.gamma*target_Q) 
 
-        # print(action_index)
         Q = torch.gather(self.critic(states), 1, action_index)
-        # Q = self.critic(states)[action_index].unsqueeze(1)
 
         #compute and return the MSE loss 
         return torch.nn.functional.mse_loss(Q, y)
@@ -68,7 +66,7 @@ class DQL():
         with torch.no_grad():
             r = np.random.rand()
             if r < self.epsilon:
-                action_index = np.random.randint(0, len(self.actions))# .choice(self.actions)
+                action_index = np.random.randint(0, len(self.actions))
 
             else:
                 action_index = self.compute_optimal_actions(states,values=False)[0]
@@ -78,7 +76,7 @@ class DQL():
         """
         Choose an action using the actor network
         """
-        states = torch.Tensor(np.array(states)).unsqueeze(0)
+        states = torch.Tensor(np.array(states)).unsqueeze(0).to(device)
         with torch.no_grad():
             self.critic.eval()
 
@@ -88,8 +86,6 @@ class DQL():
             self.critic.train()
 
         if values:
-            # print(states)
-            # print(self.actions[best_action_index])
             return np.array(torch.Tensor(self.actions[best_action_index]).unsqueeze(1))
 
         return best_action_index

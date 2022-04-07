@@ -5,12 +5,12 @@ import time
 import torch
 
 from models.dql import DQL
-from utils.noise import OU 
-from utils.expected_return import J
-from utils.utils import generate_sample, parse_args
+from models.utils.noise import OU 
+from models.utils.expected_return import J
+from utils import generate_sample, parse_args
 from models.fqi import Fitted_Q_ERT
-from utils.utils import *
-from networks import Actor_DDPG, Critic_DDPG, Critic_DQL
+from utils import *
+from models.networks import Actor_DDPG, Critic_DDPG, Critic_DQL
 from models.ddpg import DDPG
 
 def render(env, model):
