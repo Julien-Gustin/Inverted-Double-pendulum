@@ -32,17 +32,17 @@ python main.py [-h] [--ddpg] [--fqi] [--dql] [--batchnorm] [--render RENDER] [--
 
 &rarr; *0.99 give the best results*
 
-`SAMPLES` are the number of sample used when training **fqi**
+`SAMPLES` are the number of samples used when training **fqi**
 
 &rarr; *Higher is the better but 200k give reasonable good result (computation expensive)*
 
-`ACTIONS` number of discrete action when using either **ddpg** or **fqi**
+`ACTIONS` number of discrete actions when using either **dql** or **fqi**
 
 &rarr; *Should be an odd number*
 
 `SEED` the seed to use
 
-## Example
+## Examples
 
 ### Load a saved model using ddpg
 
