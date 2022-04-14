@@ -17,7 +17,7 @@ the upright and the current state is above a given thresold.
 - Deep Q-learning: `dql`
 - Deep Deterministic Policy Gradient: `ddpg`
 
-## Utilisation
+## Use
 Make sure to have installed [pybullet-gym](https://github.com/benelot/pybullet-gym) before using the program.
 
 
