@@ -76,7 +76,6 @@ class DQL():
                 action_index = np.random.randint(0, len(self.actions))
 
             else:
-                print("ok")
                 states = torch.Tensor(np.array(states)).to(device)
                 action_index = self.compute_optimal_actions(states,values=False)
 
@@ -96,7 +95,7 @@ class DQL():
             self.critic.train()
 
         if values:
-            return np.array([[self.actions[best_action_index]]])
+            return np.array(self.actions[best_action_index])
 
         return best_action_index
 
@@ -152,7 +151,6 @@ class DQL():
             start = time.process_time()
 
             self.env.seed(self.nb_simulation + i) # not interfer with the computation of J
-            print(self.epsilon)
             for step in range(self.steps):
                 #make a step in the environment
                 action_index = self.choose_action(current_state)

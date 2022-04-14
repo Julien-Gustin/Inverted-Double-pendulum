@@ -57,13 +57,14 @@ def parse_args():
     return args
 
 def generate_sample(env, buffer_size:int, seed:int):
+    """ Generate random trajectories """
     np.random.seed(seed)
 
     buffer = []
     prec_state = env.reset()
 
     while len(buffer) < buffer_size:
-        action = env.action_space.sample() #np.random.choice(actions)
+        action = env.action_space.sample() 
         state, reward, done, _ = env.step([action])
 
         buffer.append([prec_state, action, reward, state, done])
@@ -82,12 +83,12 @@ def get_discretize_action(n_actions:int):
 
 
 def render(env, model):
+    """ Render the double pendulum given a policy """
     env.render() 
     state = env.reset()
 
     while True:
-        action = model.compute_optimal_actions([state])
-        print(action)
+        action = model.compute_optimal_actions(state)
         state, _, done, _ = env.step([action])
         time.sleep(1e-2)
 
