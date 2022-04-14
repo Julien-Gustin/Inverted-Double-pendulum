@@ -6,7 +6,7 @@ the upright and the current state is above a given thresold.
 <figure>
 <p align="center">
 <img src="https://github.com/Julien-Gustin/RL-INFO8003/blob/master/idp/gif/optimal_policy.gif" width="600" height="400" />
-  <figcaption>Agent trained for 500 epochs using DDPG algorithm and gamma set to 0.99</figcaption>
+  <center>Agent trained for 500 epochs using DDPG algorithm and gamma set to 0.99</center>
 </p>
 
 </figure>
