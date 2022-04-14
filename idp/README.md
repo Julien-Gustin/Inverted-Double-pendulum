@@ -3,10 +3,12 @@ The Double Inverted Pendulum consists of two joint pendulums connected to a cart
 is moving on a track, the agent needs to keeps in equilibrium the Double Inverted Pendulum by interacting with the environment by applying an horizontal force on a cart. At each transition,
 additionally to the reward given by the environment, the agent receives a positive, constant signal. A terminal state of the environment is reached when the distance between
 the upright and the current state is above a given thresold.
-
+<figure>
 <p align="center">
 <img src="https://github.com/Julien-Gustin/RL-INFO8003/blob/master/idp/gif/optimal_policy.gif" width="600" height="400" />
 </p>
+  <figcaption>Agent trained for 500 epochs using DDPG algorithm and gamma set to 0.99</figcaption>
+</figure>
 ## Algorithms available
 
 - Fitted Q-iteration: `fqi`
