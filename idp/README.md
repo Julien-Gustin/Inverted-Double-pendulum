@@ -5,7 +5,7 @@ additionally to the reward given by the environment, the agent receives a positi
 the upright and the current state is above a given thresold.
 
 
-<img src="https://github.com/Julien-Gustin/RL-INFO8003/tree/master/idp/gif/optimal_policy.gif" width="200" height="400" />
+<img src="https://github.com/Julien-Gustin/RL-INFO8003/tree/master/idp/gif/optimal_policy.gif" width="600" height="400" />
 
 ## Algorithms available
 
