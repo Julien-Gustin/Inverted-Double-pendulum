@@ -34,7 +34,7 @@ python main.py [-h] [--ddpg] [--fqi] [--dql] [--batchnorm] [--render RENDER] [--
 
 `SAMPLES` are the number of samples used when training **fqi**
 
-&rarr; *Higher is the better but 200k give reasonable good result (computation expensive)*
+&rarr; *Higher is the better but 200k give reasonable good results (computation expensive)*
 
 `ACTIONS` number of discrete actions when using either **dql** or **fqi**
 
