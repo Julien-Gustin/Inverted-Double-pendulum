@@ -47,6 +47,7 @@ class Critic_DDPG(nn.Module):
         x = torch.cat((x, action), dim=1)
         x = self.l2(x)
         x = self.l3(x)
+
         return x
 
 class Critic_DQL(nn.Module):
@@ -83,6 +84,7 @@ class Critic_DQL(nn.Module):
         x = self.l1(state)
         x = self.l2(x)
         x = self.l3(x)
+
         return x
 
 class Actor_DDPG(nn.Module):

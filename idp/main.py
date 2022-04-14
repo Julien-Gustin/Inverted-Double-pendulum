@@ -13,17 +13,45 @@ from utils import *
 from models.networks import Actor_DDPG, Critic_DDPG, Critic_DQL
 from models.ddpg import DDPG
 
-def render(env, model):
-    env.render() 
-    state = env.reset()
+def launch_FQI(env, args, actions):
+    """ Fitted Q-iteration algorithm """
+    samples = generate_sample(env, args.samples, seed=args.seed)
+    fqi = Fitted_Q_ERT(args.gamma, actions, env, seed=args.seed)
+    fqi.fit(samples, compute_j=True)
+    fqi.make_plot()
 
-    while True:
-        action = model.compute_optimal_actions([state])
-        state, _, done, _ = env.step([action])
-        time.sleep(1e-2)
+def launch_DDPG(env, args, file_extension): 
+    """ Deep deterministic policy gradient """
+    actor = Actor_DDPG(batch=args.batchnorm, state_space=9, seed=args.seed)
+    critic = Critic_DDPG(batch=args.batchnorm, action_space=1, state_space=9, seed=args.seed)
 
-        if done:
-            state = env.reset()
+    # Render a loaded model
+    if args.render is not None:
+        actor.load_state_dict(torch.load(args.render, map_location="cpu"))
+        ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=args.gamma)
+
+        render(env, ddpg)
+
+    # Train ddpg
+    else:
+        ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=args.gamma)
+        ddpg.apply()
+
+def launch_DQL(env, args, actions, file_extension):
+    """ Deep Q-Learning """
+    critic = Critic_DQL(args.batchnorm, len(actions), state_space=9, seed=args.seed)
+
+    # Render a loaded model    
+    if args.render is not None:
+        critic.load_state_dict(torch.load(args.render, map_location="cpu"))
+        dql = DQL(env, critic, file_extension, actions=actions, gamma=args.gamma)
+
+        render(env, dql)
+
+    # Train dql
+    else:
+        dql = DQL(env, critic, file_extension, actions=actions, gamma=args.gamma)
+        dql.apply()
 
 if __name__ == '__main__':
     # parse input
@@ -43,45 +71,13 @@ if __name__ == '__main__':
 
     # Fitted Q-Iteration
     if args.fqi:
-        samples = generate_sample(env, args.samples, seed=args.samples)
-        fqi = Fitted_Q_ERT(args.gamma, actions, seed=args.seed)
-        fqi.fit(samples)
+        launch_FQI(env, args, actions)
 
-        mean, std = J(env, fqi, args.gamma, 50, 1000)
-
-        print("{} samples: | mean: {} | std: {}".format(args.samples, mean, std))
-
-    
     # Deep Deterministic Policy Gradient
     if args.ddpg:
-        actor = Actor_DDPG(batch=args.batchnorm, state_space=9, seed=args.seed)
-        critic = Critic_DDPG(batch=args.batchnorm, action_space=1, state_space=9, seed=args.seed)
-
-        # Render a loaded model
-        if args.render is not None:
-            actor.load_state_dict(torch.load(args.render, map_location="cpu"))
-            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=args.gamma)
-
-            render(env, ddpg)
-
-        # Train ddpg
-        else:
-            ddpg = DDPG(env, critic, actor, OU(0, 0, 0.15, 0.2), file_extension ,gamma=args.gamma)
-            ddpg.apply()
+        launch_DDPG(env, args, file_extension)
 
     # Deep Q-Learning
     if args.dql:
-        critic = Critic_DQL(args.batchnorm, len(actions), state_space=9, seed=args.seed)
-
-        # Render a loaded model    
-        if args.render is not None:
-            critic.load_state_dict(torch.load(args.render, map_location="cpu"))
-            dql = DQL(env, critic, file_extension, actions=actions, gamma=args.gamma)
-
-            render(env, dql)
-
-        # Train dql
-        else:
-            dql = DQL(env, critic, file_extension, actions=actions, gamma=args.gamma)
-            dql.apply()
+        launch_DQL(env, args, actions, file_extension)
 

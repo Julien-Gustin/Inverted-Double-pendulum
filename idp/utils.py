@@ -1,5 +1,6 @@
 import numpy as np
 import argparse
+import time
 
 def parse_args():
     """ 
@@ -49,6 +50,10 @@ def parse_args():
         print("Error: The number of discrete action should be odd")
         exit()
 
+    if args.fqi and (args.samples is None):
+        print("Error: Please provide a number of samples to compute FQI")
+        exit()
+
     return args
 
 def generate_sample(env, buffer_size:int, seed:int):
@@ -76,3 +81,15 @@ def get_discretize_action(n_actions:int):
     return np.linspace(-1, 1, n_actions)
 
 
+def render(env, model):
+    env.render() 
+    state = env.reset()
+
+    while True:
+        action = model.compute_optimal_actions([state])
+        print(action)
+        state, _, done, _ = env.step([action])
+        time.sleep(1e-2)
+
+        if done:
+            state = env.reset()

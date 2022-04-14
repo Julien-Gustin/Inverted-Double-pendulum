@@ -16,14 +16,16 @@ class DDPG():
         self.env = env 
         self.critic = critic.to(device)
         self.actor = actor.to(device)
-        self.gamma = gamma
+        self.target_critic = deepcopy(critic).to(device)
+        self.target_actor = deepcopy(actor).to(device)
+
+        self.gamma = gamma # discount factor
         self.tau = tau 
         self.batch_size = batch_size
         self.replay_buffer_size = replay_buffer_size
         self.episodes = episodes
         self.steps = steps 
-        self.target_critic = deepcopy(critic).to(device)
-        self.target_actor = deepcopy(actor).to(device)
+
         self.exploration = exploration
         self.file_extension = file_extension
         self.nb_simulation = nb_simulation
@@ -133,7 +135,7 @@ class DDPG():
 
     def apply(self):
         """
-        Train the agent in an online manner
+        Train the agent 
         """
         #Initialize the replay buffer 
         replay_buffer = ReplayBuffer(self.replay_buffer_size)

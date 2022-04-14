@@ -15,23 +15,30 @@ class DQL():
     def __init__(self, env, critic, file_extension, actions, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, nb_simulation=50):
         self.env = env
         self.critic = critic.to(device)
-        self.actions = actions
-        self.gamma = gamma
-        self.tau = tau 
+        self.target_critic = deepcopy(critic).to(device)
+
+        self.actions = actions # discrete actions
+        self.gamma = gamma # discount factor
+        self.tau = tau # update target factor
+
         self.batch_size = batch_size
         self.replay_buffer_size = replay_buffer_size
+
         self.episodes = episodes
         self.steps = steps 
-        self.target_critic = deepcopy(critic).to(device)
-        self.epsilon = 1
+
         self.file_extension = file_extension
         self.nb_simulation = nb_simulation
 
         # update epsiln
-        self.end = episodes*steps*0.2
+        self.min_epsilon = 0.1
+        self.max_epsilon = 1.0
+        self.decay = 0.01
+        self.n_transitions = int(episodes*steps*0.5)
+        self.epsilon = self.max_epsilon # epsilon greedy
         self.current = 0
 
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=1e-3)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=1e-3, weight_decay=1e-2)
 
         #These networks must be updated using exponential averaging w.r.t the critic network and the actor policy, not through the gradients
         for param in self.target_critic.parameters():
@@ -45,7 +52,7 @@ class DQL():
             states, action_index, rewards, new_states, done = batch['states'].to(device), batch['actions'].to(device).long(), batch['rewards'].to(device), batch['new_states'].to(device), batch['done'].to(device)
             #Bellman equation
             target_Q = self.target_critic(new_states).max(axis=1)[0].unsqueeze(1)
-            y = torch.where(done == True, rewards, self.gamma*target_Q) 
+            y = torch.where(done == True, rewards, rewards + self.gamma*target_Q) 
 
         Q = torch.gather(self.critic(states), 1, action_index)
 
@@ -54,14 +61,14 @@ class DQL():
 
     def update_epsilon(self):
         """
-        Epsilon annealed linearly from 1.0 to 0.1 over 100000 frames
+        Epsilon annealed linearly from 1.0 to 0.1
         """
-        self.epsilon = max((self.end - self.current)/self.end, 0.1)
+        self.epsilon = max(self.max_epsilon - (self.max_epsilon - self.min_epsilon) * self.current / (self.n_transitions), self.min_epsilon)
         self.current += 1
 
     def choose_action(self, states):
         """
-        Chooses an action using the actor network and by applying some noise to explore 
+        Chooses an action with an epsilon greedy strategy
         """
         with torch.no_grad():
             r = np.random.rand()
@@ -69,30 +76,33 @@ class DQL():
                 action_index = np.random.randint(0, len(self.actions))
 
             else:
-                action_index = self.compute_optimal_actions(states,values=False)[0]
+                print("ok")
+                states = torch.Tensor(np.array(states)).to(device)
+                action_index = self.compute_optimal_actions(states,values=False)
+
         return np.array(action_index)
 
     def compute_optimal_actions(self, states, values=True):
         """
-        Choose an action using the actor network
+        Choose the action that maximize the network
         """
-        states = torch.Tensor(np.array(states)).unsqueeze(0).to(device)
         with torch.no_grad():
             self.critic.eval()
-
-            y_pred = self.critic(states).detach().to("cpu").numpy()
-            best_action_index = np.argmax(y_pred, axis=1)
+            states = np.array(states)
+            t_state = torch.Tensor(states).to(device)
+            y_pred = self.critic(t_state).detach().to("cpu").numpy()
+            best_action_index = np.argmax(y_pred, axis=0)
 
             self.critic.train()
 
         if values:
-            return np.array(torch.Tensor(self.actions[best_action_index]).unsqueeze(1))
+            return np.array([[self.actions[best_action_index]]])
 
         return best_action_index
 
     def update_networks(self, batch):
         """
-        Performs one step of gradient descent for the critic network and the actor network
+        Performs one step of gradient descent for the critic network
         """
         #Update critic network using gradient descent
         closs = self.critic_loss(batch)
@@ -104,7 +114,7 @@ class DQL():
 
     def update_target_networks(self):
         """
-        Performs exponential averaging on the parameters of the target networks, with respect to the parameters of the networks
+        Performs exponential averaging on the parameters of the target network, with respect to the parameters of the networks
         """
         with torch.no_grad():
             for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
@@ -113,7 +123,7 @@ class DQL():
 
     def apply(self):
         """
-        Train the agent in an online manner
+        Train the agent
         """
         #Initialize the replay buffer 
         replay_buffer = ReplayBuffer(self.replay_buffer_size)
@@ -126,10 +136,11 @@ class DQL():
         current_state = self.env.reset()
         # fill the buffer with random actions
         for i in range(1000):
-            action_index = np.random.randint(0, len(self.actions))# .choice(self.actions)
+            action_index = np.random.randint(0, len(self.actions))
             new_state, reward, done, _ = self.env.step([self.actions[action_index]])
             replay_buffer.store((current_state, action_index, reward, new_state, done))
             current_state = self.env.reset() if done else new_state
+
         #Algorithm
         for i in range(1, self.episodes+1):
             #Initialize a new starting state for the episode
@@ -137,13 +148,12 @@ class DQL():
             
             #Keep track of losses
             critic_losses = []
-            actor_losses = []
             
             start = time.process_time()
 
             self.env.seed(self.nb_simulation + i) # not interfer with the computation of J
-
-            for _ in range(self.steps):
+            print(self.epsilon)
+            for step in range(self.steps):
                 #make a step in the environment
                 action_index = self.choose_action(current_state)
                 action = np.array([[self.actions[action_index]]])
@@ -161,11 +171,12 @@ class DQL():
                 #Perform one step of gradient descend for the networks
                 closs = self.update_networks(batch)
 
-                #Remember the losses 
+                #Remember the loss
                 critic_losses.append(closs)
 
-                #Update target networks
+                #Update target network
                 self.update_target_networks()
+
                 self.update_epsilon()
 
             avg_critic_loss = torch.mean(torch.Tensor(critic_losses))
