@@ -9,6 +9,7 @@ the upright and the current state is above a given thresold.
 </p>
   <figcaption>Agent trained for 500 epochs using DDPG algorithm and gamma set to 0.99</figcaption>
 </figure>
+
 ## Algorithms available
 
 - Fitted Q-iteration: `fqi`
