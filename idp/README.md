@@ -28,7 +28,7 @@ python main.py [-h] [--ddpg] [--fqi] [--dql] [--batchnorm] [--render RENDER] [--
 
 &rarr; *This will render the double pendulum with the given pretrained model.*
 
-`GAMMA` is the discound factor $\gamma \in [0, 1]$
+`GAMMA` is the discount factor $\gamma \in [0, 1]$
 
 &rarr; *0.99 give the best results*
 
