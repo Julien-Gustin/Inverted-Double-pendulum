@@ -1,6 +1,5 @@
 import gym
 import pybulletgym  # register PyBullet enviroments with open ai gym
-import time
 
 import torch
 

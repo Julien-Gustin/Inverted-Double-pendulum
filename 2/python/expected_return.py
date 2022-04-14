@@ -22,7 +22,6 @@ def J_th(rewards, discount_factor):
 def J(domain: CarOnTheHillDomain, policy: Policy, discount_factor:float, nb_simulations: int, trajectory_length:int, seed=0):
     """ Estimates the expected return of a policy for the car on the hill problem """
     J_hat = np.zeros((nb_simulations))
-    J_n = np.zeros((nb_simulations, trajectory_length))
 
     for i in range(nb_simulations):
         initial_state = State.random_initial_state(seed=nb_simulations*seed + i)
