@@ -197,8 +197,5 @@ class DQL():
         plt.fill_between(range(self.episodes),J_mean-J_std,J_mean+J_std,alpha=.1)
         plt.savefig("figures/J_{}.png".format(self.file_extension))
 
-        J_mean.tofile("data/J_mean_{}".format(self.file_extension))
-        J_std.tofile("data/J_std_{}".format(self.file_extension))
-
 
 
