@@ -26,19 +26,19 @@ python main.py [-h] [--ddpg] [--fqi] [--dql] [--batchnorm] [--render RENDER] [--
 ```
 `RENDER` should be a file toward a saved model for either **dql** or **ddpg**
 
- -> *This will render the double pendulum with the given pretrained model.*
+&rarr; *This will render the double pendulum with the given pretrained model.*
 
 `GAMMA` is the discound factor $\gamma \in [0, 1]$
 
- -> *0.99 give the best results*
+&rarr; *0.99 give the best results*
 
 `SAMPLES` are the number of sample used when training **fqi**
 
- -> *Higher is the better but 200k give reasonable good result (computation expensive)*
+&rarr; *Higher is the better but 200k give reasonable good result (computation expensive)*
 
 `ACTIONS` number of discrete action when using either **ddpg** or **fqi**
 
- -> *Should be an odd number*
+&rarr; *Should be an odd number*
 
 `SEED` the seed to use
 
