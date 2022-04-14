@@ -4,6 +4,9 @@ is moving on a track, the agent needs to keeps in equilibrium the Double Inverte
 additionally to the reward given by the environment, the agent receives a positive, constant signal. A terminal state of the environment is reached when the distance between
 the upright and the current state is above a given thresold.
 
+
+![Alt Text](https://github.com/Julien-Gustin/RL-INFO8003/tree/master/idp/gif/optimal_policy.gif)
+
 ## Algorithms available
 
 - Fitted Q-iteration: `fqi`
@@ -48,3 +51,4 @@ python main.py --ddpg --gamma 0.99 --render saved_models/model
 ```
 python main.py --dql --gamma 0.99 --actions 11
 ```
+
