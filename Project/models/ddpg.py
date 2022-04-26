@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-print(device)
-
 class DDPG():
     def __init__(self, env, critic, actor, exploration, file_extension, gamma=0.99, tau=0.999, batch_size=64, replay_buffer_size=int(1e6), episodes=500, steps=1000, nb_simulation=50):
         self.env = env 

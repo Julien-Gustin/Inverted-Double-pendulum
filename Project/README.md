@@ -47,7 +47,7 @@ python main.py [-h] [--ddpg] [--fqi] [--dql] [--batchnorm] [--render RENDER] [--
 ### Load a saved model using ddpg
 
 ```
-python main.py --ddpg --gamma 0.99 --render saved_models/model
+python main.py --ddpg --gamma 0.99 --render saved_models/DDPG
 ```
 
 ### Train a dql using 11 discrete actions
