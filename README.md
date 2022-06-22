@@ -12,7 +12,7 @@ the upright and the current state is above a given thresold.
 
 ## Implementation and method
 
-More informations concerning the implementation and method on the [report](report.pdf).
+More informations concerning the implementation and method in the [report](report.pdf).
 
 ## Algorithms available
 
