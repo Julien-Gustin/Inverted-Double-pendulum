@@ -5,11 +5,14 @@ additionally to the reward given by the environment, the agent receives a positi
 the upright and the current state is above a given thresold.
 
 <p align="center">
-    <img src="https://github.com/Julien-Gustin/RL-INFO8003/blob/master/Project/gif/optimal_policy.gif" width="600" height="400" />
+    <img src="https://github.com/Julien-Gustin/RL-INFO8003/blob/master/gif/optimal_policy.gif" width="600" height="400" />
     <br>
     <em>Agent trained for 500 epochs using DDPG algorithm and gamma set to 0.99</em>
 </p>
 
+## Implementation and method
+
+More informations concerning the implementation and method on the [report](report.pdf).
 
 ## Algorithms available
 
